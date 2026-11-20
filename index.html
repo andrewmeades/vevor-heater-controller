@@ -1,0 +1,1460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#0d0f12" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>8KW Trailer Heater Controller</title>
+  <style>
+    :root {
+      --bg: #0d0f12;
+      --card: #16191e;
+      --border: #262b33;
+      --text: #f0f4f8;
+      --muted: #8b95a5;
+      --accent: #ff5722;
+      --accent-on: #ff3d00;
+      --green: #00e676;
+      --amber: #ffab00;
+      --red: #ff1744;
+      --blue: #2979ff;
+      --ice: #40c4ff;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      padding: 12px;
+      max-width: 480px;
+      margin: 0 auto;
+      overflow-x: hidden;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 12px;
+      gap: 6px;
+    }
+    .title { font-size: 0.96rem; font-weight: 800; letter-spacing: 0.3px; white-space: nowrap; }
+    .header-right { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+    .btn-top {
+      font-size: 0.7rem;
+      font-weight: 800;
+      padding: 5px 8px;
+      border-radius: 6px;
+      background: #1e232a;
+      border: 1px solid var(--border);
+      color: var(--text);
+      cursor: pointer;
+    }
+    .btn-unit { border-color: var(--amber); color: var(--amber); background: rgba(255,171,0,0.1); }
+    .btn-install { border-color: var(--blue); color: #82b1ff; background: rgba(41,121,255,0.15); }
+    .badge {
+      font-size: 0.68rem;
+      font-weight: 700;
+      padding: 5px 7px;
+      border-radius: 6px;
+      background: #1e232a;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      max-width: 96px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .badge.connected { color: var(--green); border-color: var(--green); background: rgba(0,230,118,0.08); }
+
+    /* Navigation Tabs */
+    .tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .tab-btn {
+      background: var(--card);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      padding: 10px 4px;
+      border-radius: 8px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      text-align: center;
+      position: relative;
+    }
+    .tab-btn.active {
+      color: var(--text);
+      border-color: var(--blue);
+      background: rgba(41, 121, 255, 0.14);
+    }
+    .tab-dot {
+      display: none;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--amber);
+      position: absolute;
+      top: 6px;
+      right: 7px;
+    }
+    .view { display: none; }
+    .view.active { display: block; }
+
+    /* Buttons */
+    .btn {
+      width: 100%;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--text);
+      font-size: 0.92rem;
+      font-weight: 700;
+      padding: 13px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: transform 0.08s, background 0.15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .btn:active { transform: scale(0.98); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-connect { background: var(--blue); border-color: var(--blue); margin-bottom: 12px; }
+    .btn-power {
+      height: 74px;
+      font-size: 1.14rem;
+      letter-spacing: 0.6px;
+      border-width: 2px;
+      margin-bottom: 12px;
+    }
+    .btn-power.active {
+      background: rgba(255, 61, 0, 0.18);
+      border-color: var(--accent-on);
+      color: #ff8a65;
+      box-shadow: 0 0 20px rgba(255, 61, 0, 0.22);
+    }
+    .btn-power.cooling {
+      background: rgba(64, 196, 255, 0.12);
+      border-color: var(--ice);
+      color: var(--ice);
+    }
+
+    .fault-banner {
+      display: none;
+      background: rgba(255, 23, 68, 0.15);
+      border: 2px solid var(--red);
+      color: #ff8a80;
+      padding: 11px;
+      border-radius: 8px;
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: 12px;
+      font-size: 0.85rem;
+    }
+
+    /* Telemetry Grid */
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+      position: relative;
+      min-width: 0;
+    }
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 4px;
+    }
+    .card-label { font-size: 0.66rem; text-transform: uppercase; color: var(--muted); letter-spacing: 0.5px; }
+    .card-val { font-size: 1.45rem; font-weight: 800; margin-top: 5px; }
+
+    .pill {
+      font-size: 0.6rem;
+      font-weight: 800;
+      padding: 2px 5px;
+      border-radius: 4px;
+      letter-spacing: 0.3px;
+      white-space: nowrap;
+    }
+    .pill-ok { background: rgba(0,230,118,0.12); color: var(--green); border: 1px solid var(--green); }
+    .pill-warn { background: rgba(255,171,0,0.16); color: var(--amber); border: 1px solid var(--amber); }
+    .pill-low { background: rgba(255,23,68,0.2); color: #ff8a80; border: 1px solid var(--red); }
+
+    /* Fuel Card */
+    .fuel-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 14px;
+      margin-bottom: 12px;
+      cursor: pointer;
+    }
+    .fuel-card:active { transform: scale(0.99); }
+    .fuel-bar-bg {
+      width: 100%;
+      height: 8px;
+      background: #0b0d10;
+      border-radius: 4px;
+      overflow: hidden;
+      margin-top: 8px;
+      border: 1px solid var(--border);
+    }
+    .fuel-bar-fill {
+      height: 100%;
+      background: var(--green);
+      transition: width 0.3s;
+    }
+
+    /* Modals */
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.78);
+      z-index: 99;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .modal-backdrop.open { display: flex; }
+    .modal {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px;
+      width: 100%;
+      max-width: 380px;
+    }
+    .modal h3 { font-size: 1rem; margin-bottom: 12px; }
+    .field-row { margin-bottom: 12px; }
+    .field-row label { display: block; font-size: 0.74rem; color: var(--muted); margin-bottom: 5px; font-weight: 700; }
+    .field-row input[type="number"] {
+      width: 100%;
+      background: #0d0f12;
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 10px;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 700;
+    }
+    .quick-pcts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 6px; }
+    .btn-mini {
+      padding: 8px 4px;
+      font-size: 0.74rem;
+      border-radius: 6px;
+      background: #1e232a;
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    /* Controls */
+    .control-box {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px;
+      margin-bottom: 12px;
+    }
+    .control-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .step-row { display: flex; align-items: center; gap: 10px; }
+    .btn-step { width: 54px; height: 46px; font-size: 1.35rem; flex-shrink: 0; }
+    input[type="range"] { flex: 1; accent-color: var(--accent); height: 8px; min-width: 0; }
+
+    .sub-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .btn-vent.active { border-color: var(--ice); color: var(--ice); background: rgba(64,196,255,0.1); }
+    .btn-timer {
+      background: rgba(255, 171, 0, 0.12);
+      border-color: var(--amber);
+      color: var(--amber);
+      margin-bottom: 12px;
+    }
+
+    /* Schedule Tab — Compact 2-Line Mobile Fit (Zero Horizontal Overflow) */
+    .sched-bar { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+    .btn-sm { padding: 10px 8px; font-size: 0.76rem; }
+    .refill-alert {
+      display: none;
+      background: rgba(255, 171, 0, 0.14);
+      border: 1px solid var(--amber);
+      color: var(--amber);
+      padding: 9px 10px;
+      border-radius: 8px;
+      font-size: 0.76rem;
+      font-weight: 700;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+    .sched-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
+    .sched-row {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      width: 100%;
+    }
+    .sched-row.armed { border-color: rgba(255, 171, 0, 0.55); background: rgba(255, 171, 0, 0.04); }
+    .sched-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
+    }
+    .sched-day-wrap { display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; min-width: 0; }
+    .sched-day { font-weight: 800; font-size: 0.9rem; }
+    .sched-date { font-size: 0.74rem; color: var(--muted); }
+    .sched-bottom {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
+      flex-wrap: wrap;
+    }
+    .sched-times {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.76rem;
+      color: var(--muted);
+    }
+    .sched-times input[type="time"] {
+      background: #0d0f12;
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 4px 6px;
+      font-size: 0.78rem;
+      font-family: inherit;
+      width: 98px;
+      max-width: 38vw;
+    }
+    .sched-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      margin-left: auto;
+    }
+    .low-freeze { color: var(--ice); }
+    .fuel-proj-ok { color: var(--green); }
+    .fuel-proj-low { color: var(--amber); }
+    .fuel-proj-empty { color: #ff8a80; }
+
+    .toggle-pill {
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 0.74rem;
+      font-weight: 800;
+      border: 1px solid var(--border);
+      background: #1e232a;
+      color: var(--muted);
+      cursor: pointer;
+      flex-shrink: 0;
+      text-align: center;
+    }
+    .toggle-pill.on {
+      background: rgba(0, 230, 118, 0.15);
+      border-color: var(--green);
+      color: var(--green);
+    }
+
+    /* De-Soot Card */
+    .desoot-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px;
+      margin-bottom: 12px;
+    }
+    .desoot-card.due {
+      border-color: var(--amber);
+      background: rgba(255, 171, 0, 0.06);
+    }
+    .desoot-why {
+      font-size: 0.76rem;
+      color: var(--muted);
+      line-height: 1.4;
+      margin: 8px 0 10px;
+      display: none;
+    }
+    .desoot-why.open { display: block; }
+
+    /* Guide Tab */
+    .guide-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px;
+      margin-bottom: 12px;
+      line-height: 1.45;
+    }
+    .guide-card h3 { font-size: 0.9rem; color: var(--amber); margin-bottom: 6px; }
+    .guide-card p, .guide-card li { font-size: 0.81rem; color: #c5cdd8; }
+    .guide-card ul { padding-left: 18px; margin-top: 4px; }
+    .guide-card li { margin-bottom: 5px; }
+
+    .log {
+      background: #08090b;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 9px;
+      font-size: 0.68rem;
+      color: #6c7786;
+      height: 76px;
+      overflow-y: auto;
+      font-family: monospace;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <div class="title">VEVOR 8KW // BLE</div>
+    <div class="header-right">
+      <button id="btnUnit" class="btn-top btn-unit" onclick="toggleUnitSystem()">°C</button>
+      <button id="btnInstall" class="btn-top btn-install" onclick="handleInstallClick()">📲 APP</button>
+      <div id="connBadge" class="badge">OFFLINE</div>
+    </div>
+  </div>
+
+  <button id="btnConnect" class="btn btn-connect" onclick="toggleConnect()">
+    CONNECT HEATER
+  </button>
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('control', this)">🔥 CONTROL</button>
+    <button class="tab-btn" onclick="switchTab('schedule', this)">
+      📅 SCHEDULE
+      <span id="schedDot" class="tab-dot"></span>
+    </button>
+    <button class="tab-btn" onclick="switchTab('guide', this)">❓ GUIDE</button>
+  </div>
+
+  <div id="faultBanner" class="fault-banner"></div>
+
+  <!-- ================= TAB 1: CONTROL ================= -->
+  <div id="view-control" class="view active">
+    <button id="btnPower" class="btn btn-power" onclick="togglePower()">
+      POWER: STANDBY
+    </button>
+
+    <div class="grid">
+      <div class="card">
+        <div class="card-label">State / Mode</div>
+        <div id="valState" class="card-val" style="font-size:1.12rem">--</div>
+      </div>
+      <div class="card">
+        <div class="card-top">
+          <span class="card-label">Supply Voltage</span>
+          <span id="battPill" class="pill pill-ok" style="display:none">OK</span>
+        </div>
+        <div id="valVoltage" class="card-val">-- V</div>
+      </div>
+      <div class="card">
+        <div class="card-label">Trailer Ambient</div>
+        <div id="valAmbient" class="card-val">--</div>
+      </div>
+      <div class="card">
+        <div class="card-label">Heat Exchanger</div>
+        <div id="valCase" class="card-val">--</div>
+      </div>
+    </div>
+
+    <!-- Clickable Fuel Tank Card -->
+    <div class="fuel-card" onclick="openFuelModal()">
+      <div class="card-top">
+        <span class="card-label">⛽ DIESEL TANK (TAP TO SET / REFILL)</span>
+        <span id="fuelStatusPill" class="pill pill-ok">89%</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:6px;">
+        <div id="valFuelVol" style="font-size:1.22rem;font-weight:800;">--</div>
+        <div id="valFuelHours" style="font-size:0.8rem;color:var(--muted);font-weight:700;">--</div>
+      </div>
+      <div class="fuel-bar-bg">
+        <div id="fuelBarFill" class="fuel-bar-fill" style="width:89%"></div>
+      </div>
+    </div>
+
+    <div class="control-box">
+      <div class="control-header">
+        <span id="lblSliderTitle" class="card-label">TARGET PUMP GEAR (1–10)</span>
+        <span id="valTarget" style="font-size:1.22rem;font-weight:800;color:var(--accent)">--</span>
+      </div>
+      <div class="step-row">
+        <button class="btn btn-step" onclick="adjustLevel(-1)">−</button>
+        <input id="sliderTarget" type="range" min="1" max="10" value="4"
+          onchange="onSliderCommit(this.value)"
+          oninput="onSliderPreview(this.value)" />
+        <button class="btn btn-step" onclick="adjustLevel(1)">+</button>
+      </div>
+    </div>
+
+    <div class="sub-actions">
+      <button class="btn" onclick="toggleMode()">MODE: <span id="lblMode">--</span></button>
+      <button id="btnVent" class="btn btn-vent" onclick="sendCommand('baab04bba40000')">FAN / VENT</button>
+    </div>
+
+    <button class="btn btn-timer" onclick="armQuick5AM()">
+      ⚡ QUICK ARM: 05:00–07:00 AM (ALL DAYS)
+    </button>
+  </div>
+
+  <!-- ================= TAB 2: SCHEDULE, WEATHER & DE-SOOT ================= -->
+  <div id="view-schedule" class="view">
+    <div class="sched-bar">
+      <button class="btn btn-sm" style="border-color:var(--ice);color:var(--ice)" onclick="loadWeatherLows()">🌡️ LOAD 7-DAY LOWS</button>
+      <button class="btn btn-sm" onclick="resetDefaultSchedule()">↺ RESET Mon–Fri 5AM</button>
+    </div>
+
+    <div id="refillAlert" class="refill-alert"></div>
+
+    <div id="schedNotice" style="font-size:0.73rem;color:var(--muted);margin-bottom:10px;text-align:center;">
+      Toggle workdays ON/OFF & tap <b>Save Schedule to Heater</b>.
+    </div>
+
+    <div id="schedContainer" class="sched-list"></div>
+
+    <button id="btnSaveSched" class="btn btn-timer" onclick="pushCustomSchedule()">
+      💾 SAVE SCHEDULE TO HEATER
+    </button>
+
+    <!-- Carbon De-Soot Tracker -->
+    <div id="desootCard" class="desoot-card">
+      <div class="card-top">
+        <span class="card-label">🔥 CHAMBER CARBON / DE-SOOT HEALTH</span>
+        <span id="desootPill" class="pill pill-ok">CLEAN</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;">
+        <div>
+          <span id="valLowHours" style="font-size:1.12rem;font-weight:800;">0.0 hrs</span>
+          <span style="font-size:0.75rem;color:var(--muted);"> / 20 hrs low-idle limit</span>
+        </div>
+        <span style="font-size:0.74rem;color:var(--blue);cursor:pointer;font-weight:700;" onclick="document.getElementById('desootWhy').classList.toggle('open')">Why de-soot? ▾</span>
+      </div>
+      <div id="desootWhy" class="desoot-why">
+        Running on low gears (Lvl 1–3) or Thermostat idle leaves unburnt carbon soot on the glow-plug screen, which can cause white smoke or <code>E-08 / E-10</code> startup failures. Running at <b>Max (Lvl 10) for 15 minutes</b> every ~20 low-idle hours bakes the chamber clean!
+      </div>
+      <div style="display:flex;gap:8px;margin-top:10px;">
+        <button id="btnDesoot" class="btn btn-sm" style="border-color:var(--accent);color:#ff8a65;" onclick="startDesootBurn()">
+          🔥 RUN 15-MIN MAX DE-SOOT
+        </button>
+        <button class="btn btn-sm" style="width:auto;padding:10px 12px;color:var(--muted);" onclick="resetSootCounter()">
+          Reset
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= TAB 3: QUICK USER GUIDE ================= -->
+  <div id="view-guide" class="view">
+    <div class="guide-card">
+      <h3>🌡️ °C / °F Toggle & Home Screen App</h3>
+      <ul>
+        <li>Tap the <b>°C / °F</b> button in the top header to switch temperatures and fuel units (Liters ↔ US Gallons) across the entire app.</li>
+        <li>Tap <b>📲 APP</b> at the top right (or Chrome's <b>⋮ → Add to Home screen</b>) to install as a full-screen icon on your phone.</li>
+      </ul>
+    </div>
+
+    <div class="guide-card">
+      <h3>⛽ Fuel Tank Estimator & Schedule Forecast</h3>
+      <ul>
+        <li>Tap the <b>Diesel Tank card</b> to enter your tank size (Vevor CY5004 is <b>5.0 L / 1.32 gal</b>) and match the % to your side sight glass (100%, 70%, 50%, 20%).</li>
+        <li>Fuel consumption scales from <b>0.16 L/hr (0.04 gal/hr)</b> on Lvl 1 up to <b>0.52 L/hr (0.14 gal/hr)</b> on Lvl 10.</li>
+        <li>The <b>Schedule</b> tab forecasts your remaining fuel after each scheduled morning run and warns you before the tank hits 20%.</li>
+      </ul>
+    </div>
+
+    <div class="guide-card">
+      <h3>🎛️ GEAR vs. THERMO vs. FAN / VENT</h3>
+      <ul>
+        <li><b>GEAR Mode:</b> Locks the fuel pump to a fixed heat output (<code>Lvl 1–10</code>). Best for predictable morning pre-heats in uninsulated trailers.</li>
+        <li><b>THERMO Mode:</b> Targets a set room temp (<b>8°C–36°C / 46°F–97°F</b>). Once reached, the heater idles down to Lvl 1 rather than shutting completely off.</li>
+        <li><b>FAN / VENT:</b> Runs <b>only the blower fan</b> with zero fuel and zero heat. Use it to air out fumes or circulate air in warm weather.</li>
+      </ul>
+    </div>
+
+    <div class="guide-card">
+      <h3>❄️ Cooldown Lockout & 12V Battery</h3>
+      <ul>
+        <li><b>Cooldown Cycle (3–5 mins):</b> After tapping STOP, the blower fan stays on until the Heat Exchanger cools below <b>~55°C (131°F)</b>. Restart commands are ignored by the heater until cooldown finishes!</li>
+        <li><b>⚠️ NEVER Cut 12V Power While Hot:</b> Cutting battery power at <b>190°C+ (375°F+)</b> stops the cooling fan and can melt the housing or fry the ECU. Overheat cutoff (<code>E-05</code>) triggers at <b>230°C–270°C (446°F–518°F)</b>.</li>
+        <li><b>CHARGE SOON Pill:</b> Glow-plug startup pulls <b>10A–12A</b>. Plug in your battery maintainer if resting voltage drops to <b>≤12.0V</b> so ignition load doesn't trip an <code>E-02</code> fault.</li>
+      </ul>
+    </div>
+
+    <div class="guide-card">
+      <h3>⏰ Weekly Hardware Timer & Weather Lows</h3>
+      <p>Saving a schedule programs the heater's internal clock chip—<b>your phone does NOT need to be near the trailer at 5:00 AM</b>. Note: Heater boards don't broadcast saved schedules back over Bluetooth, so this app remembers your saved schedule and shows <b>SYNCED</b> once pushed. (Note: <b>7-Day Lows</b> requires opening the app over <code>https://</code> rather than an offline local file preview).</p>
+    </div>
+  </div>
+
+  <!-- ================= FUEL CALIBRATION MODAL ================= -->
+  <div id="fuelModal" class="modal-backdrop" onclick="if(event.target===this) closeFuelModal()">
+    <div class="modal">
+      <h3>⛽ Set Tank Size & Current Fuel %</h3>
+      <div class="field-row">
+        <label id="lblModalCap">TANK CAPACITY (LITERS) — CY5004 IS 5.0 L</label>
+        <input id="inpTankCap" type="number" step="0.1" min="0.5" max="50" value="5.0" />
+      </div>
+      <div class="field-row">
+        <label>CURRENT SIGHT GLASS LEVEL (%)</label>
+        <input id="inpFuelPct" type="number" step="1" min="0" max="100" value="89" />
+        <div class="quick-pcts">
+          <button class="btn-mini" onclick="document.getElementById('inpFuelPct').value=100">100% Full</button>
+          <button class="btn-mini" onclick="document.getElementById('inpFuelPct').value=70">70% Mark</button>
+          <button class="btn-mini" onclick="document.getElementById('inpFuelPct').value=50">50% Mark</button>
+          <button class="btn-mini" onclick="document.getElementById('inpFuelPct').value=20">20% Mark</button>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:14px;">
+        <button class="btn btn-sm" onclick="closeFuelModal()">Cancel</button>
+        <button class="btn btn-sm" style="background:var(--green);color:#000;border-color:var(--green);" onclick="saveFuelModal()">Save Tank</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= INSTALL HELP MODAL ================= -->
+  <div id="installModal" class="modal-backdrop" onclick="if(event.target===this) this.classList.remove('open')">
+    <div class="modal">
+      <h3>📲 Add Controller to Home Screen</h3>
+      <p style="font-size:0.84rem;color:#c5cdd8;line-height:1.5;margin-bottom:14px;">
+        1. Open this controller via its <b>https://</b> web link in Chrome.<br>
+        2. Tap Chrome's <b>⋮</b> menu in the top-right corner.<br>
+        3. Tap <b>Add to Home screen</b> (or <b>Install app</b>).
+      </p>
+      <button class="btn btn-sm" style="background:var(--blue);border-color:var(--blue);" onclick="document.getElementById('installModal').classList.remove('open')">Got It</button>
+    </div>
+  </div>
+
+  <div id="logBox" class="log">Ready. Click Connect Heater...</div>
+
+<script>
+  // ================= SAFE STORAGE WRAPPER (Fixes Android content:// crash!) =================
+  const memStore = {};
+  function safeGet(key, fallback) {
+    try {
+      const v = localStorage.getItem(key);
+      return v !== null ? JSON.parse(v) : fallback;
+    } catch (_) {
+      return key in memStore ? memStore[key] : fallback;
+    }
+  }
+  function safeSet(key, val) {
+    memStore[key] = val;
+    try { localStorage.setItem(key, JSON.stringify(val)); } catch (_) {}
+  }
+
+  // ================= PWA SETUP =================
+  let deferredInstallPrompt = null;
+  (function setupPWA() {
+    try {
+      const iconSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192"><rect width="192" height="192" rx="38" fill="#16191e"/><path d="M96 28c0 0-44 42-44 86a44 44 0 0088 0c0-24-15-46-25-58 2 16-6 26-14 26-10 0-14-14-5-54z" fill="#ff5722"/></svg>`;
+      const iconUrl = "data:image/svg+xml;base64," + btoa(iconSvg);
+      const manifest = {
+        name: "8KW Trailer Heater",
+        short_name: "Heater 8KW",
+        display: "standalone",
+        background_color: "#0d0f12",
+        theme_color: "#0d0f12",
+        icons: [{ src: iconUrl, sizes: "192x192", type: "image/svg+xml" }]
+      };
+      const link = document.createElement("link");
+      link.rel = "manifest";
+      link.href = "data:application/manifest+json;charset=utf-8," + encodeURIComponent(JSON.stringify(manifest));
+      document.head.appendChild(link);
+
+      if (window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone) {
+        document.getElementById("btnInstall").style.display = "none";
+      }
+      window.addEventListener("beforeinstallprompt", (e) => {
+        e.preventDefault();
+        deferredInstallPrompt = e;
+      });
+      window.addEventListener("appinstalled", () => {
+        document.getElementById("btnInstall").style.display = "none";
+      });
+    } catch (_) {}
+  })();
+
+  async function handleInstallClick() {
+    if (deferredInstallPrompt) {
+      deferredInstallPrompt.prompt();
+      await deferredInstallPrompt.userChoice;
+      deferredInstallPrompt = null;
+    } else {
+      document.getElementById("installModal").classList.add("open");
+    }
+  }
+
+  // ================= UNIT CONVERSION (°C/L <-> °F/gal) =================
+  const L_PER_GAL = 3.78541;
+  let useImperial = safeGet("vevor_imperial_v4", false); // false = °C + Liters, true = °F + Gallons
+
+  function cToF(c) { return Math.round(c * 9 / 5 + 32); }
+  function fToC(f) { return Math.round((f - 32) * 5 / 9); }
+  function fmtTempFromC(c) {
+    if (c === null || c === undefined || isNaN(c)) return "--";
+    return useImperial ? `${cToF(c)} °F` : `${Math.round(c)} °C`;
+  }
+  function fmtVolFromL(liters) {
+    return useImperial ? `${(liters / L_PER_GAL).toFixed(2)} gal` : `${liters.toFixed(1)} L`;
+  }
+  function toggleUnitSystem() {
+    useImperial = !useImperial;
+    safeSet("vevor_imperial_v4", useImperial);
+    document.getElementById("btnUnit").innerText = useImperial ? "°F" : "°C";
+    refreshAllDisplays();
+  }
+
+  // ================= CONSTANTS & STATE =================
+  const FAULT_MAP = {
+    2: "E-02: Low/High Voltage Fault (Charge 12V Battery!)",
+    3: "E-03: Glow Plug Fault",
+    4: "E-04: Fuel Dosing Pump Fault",
+    5: "E-05: Over-Temp Fault (>230°C / 446°F Core)",
+    6: "E-06: Blower Fan / Hall Sensor Fault",
+    7: "E-07: Controller Communication Fault",
+    8: "E-08: Flameout (Check Diesel Level / Air Bubbles)",
+    9: "E-09: Temperature Sensor Fault",
+    10: "E-10: Ignition Startup Failed",
+    11: "E-CO: Carbon Monoxide Alarm!"
+  };
+  const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+  function burnRateLitersPerHr(gear) {
+    const g = Math.max(1, Math.min(10, gear || 4));
+    return +(0.16 + ((g - 1) / 9) * 0.36).toFixed(3);
+  }
+
+  let bleDevice = null;
+  let writeChar = null;
+  let pollInterval = null;
+  let lastTickMs = Date.now();
+  let desootTimer = null;
+  let desootSecLeft = 0;
+  let prevGearBeforeDesoot = 4;
+
+  let state = {
+    hasTelemetry: false,
+    runCode: "00",
+    runStateStr: "STANDBY",
+    isHeating: false,
+    isFault: false,
+    faultCode: 0,
+    modeHex: "00",
+    ecuIsFahrenheit: false,
+    rawTarget: 4,      // Raw value reported by ECU (1-10 in Gear, °C or °F in Thermo)
+    ambientC: null,
+    caseC: null,
+    volts: null
+  };
+
+  let fuelData = safeGet("vevor_fuel_v4", { capacityL: 5.0, remainingL: 4.45 });
+  let sootData = safeGet("vevor_soot_v4", { lowIdleHours: 0.0 });
+  let schedSynced = safeGet("vevor_sched_synced_v4", false);
+  let weeklySchedule = safeGet("vevor_sched_v4", [
+    { start: "05:00", stop: "07:00", enabled: false },
+    { start: "05:00", stop: "07:00", enabled: true  },
+    { start: "05:00", stop: "07:00", enabled: true  },
+    { start: "05:00", stop: "07:00", enabled: true  },
+    { start: "05:00", stop: "07:00", enabled: true  },
+    { start: "05:00", stop: "07:00", enabled: true  },
+    { start: "05:00", stop: "07:00", enabled: false }
+  ]);
+  let weatherByDateISO = {}; // Stored in °C
+
+  function switchTab(tabId, btnEl) {
+    document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
+    document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+    document.getElementById("view-" + tabId).classList.add("active");
+    btnEl.classList.add("active");
+    if (tabId === "schedule") {
+      renderScheduleRows();
+      renderSootUI();
+    }
+  }
+
+  function log(msg) {
+    const el = document.getElementById("logBox");
+    const ts = new Date().toLocaleTimeString();
+    el.innerHTML = `[${ts}] ${msg}<br>` + el.innerHTML;
+  }
+
+  // ================= FUEL TANK UI & MODAL =================
+  function getAssumedGear() {
+    return (state.modeHex === "00" && state.rawTarget >= 1 && state.rawTarget <= 10) ? state.rawTarget : 4;
+  }
+
+  function renderFuelUI() {
+    const pct = Math.max(0, Math.min(100, Math.round((fuelData.remainingL / fuelData.capacityL) * 100)));
+    const gear = getAssumedGear();
+    const rateL = burnRateLitersPerHr(gear);
+    const hrsLeft = fuelData.remainingL / rateL;
+
+    const remDisp = useImperial ? (fuelData.remainingL / L_PER_GAL).toFixed(2) : fuelData.remainingL.toFixed(1);
+    const capDisp = useImperial ? (fuelData.capacityL / L_PER_GAL).toFixed(2) : fuelData.capacityL.toFixed(1);
+    const unitLbl = useImperial ? "gal" : "L";
+
+    document.getElementById("valFuelVol").innerHTML =
+      `${remDisp} ${unitLbl} <span style="font-size:0.8rem;color:var(--muted);font-weight:600">/ ${capDisp} ${unitLbl}</span>`;
+    document.getElementById("valFuelHours").innerText = `~${hrsLeft.toFixed(1)} hrs @ Lvl ${gear}`;
+
+    const fill = document.getElementById("fuelBarFill");
+    const pill = document.getElementById("fuelStatusPill");
+    fill.style.width = `${pct}%`;
+
+    if (pct <= 20) {
+      fill.style.background = "var(--red)";
+      pill.className = "pill pill-low";
+      pill.innerText = `${pct}% • REFILL`;
+    } else if (pct <= 35) {
+      fill.style.background = "var(--amber)";
+      pill.className = "pill pill-warn";
+      pill.innerText = `${pct}% • LOW`;
+    } else {
+      fill.style.background = "var(--green)";
+      pill.className = "pill pill-ok";
+      pill.innerText = `${pct}%`;
+    }
+  }
+
+  function openFuelModal() {
+    const pct = Math.round((fuelData.remainingL / fuelData.capacityL) * 100);
+    const lbl = document.getElementById("lblModalCap");
+    const inp = document.getElementById("inpTankCap");
+    if (useImperial) {
+      lbl.innerText = "TANK CAPACITY (US GALLONS) — CY5004 IS 1.32 GAL";
+      inp.value = +(fuelData.capacityL / L_PER_GAL).toFixed(2);
+    } else {
+      lbl.innerText = "TANK CAPACITY (LITERS) — CY5004 IS 5.0 L";
+      inp.value = +fuelData.capacityL.toFixed(1);
+    }
+    document.getElementById("inpFuelPct").value = pct;
+    document.getElementById("fuelModal").classList.add("open");
+  }
+
+  function closeFuelModal() {
+    document.getElementById("fuelModal").classList.remove("open");
+  }
+
+  function saveFuelModal() {
+    const rawCap = Math.max(0.5, parseFloat(document.getElementById("inpTankCap").value) || (useImperial ? 1.32 : 5.0));
+    const capL = useImperial ? rawCap * L_PER_GAL : rawCap;
+    const pct = Math.max(0, Math.min(100, parseFloat(document.getElementById("inpFuelPct").value) || 0));
+    fuelData.capacityL = +capL.toFixed(2);
+    fuelData.remainingL = +(capL * (pct / 100)).toFixed(2);
+    safeSet("vevor_fuel_v4", fuelData);
+    refreshAllDisplays();
+    closeFuelModal();
+    log(`Tank set: ${pct}% (${fmtVolFromL(fuelData.remainingL)})`);
+  }
+
+  // ================= DE-SOOT TRACKER =================
+  function renderSootUI() {
+    const hrs = sootData.lowIdleHours;
+    document.getElementById("valLowHours").innerText = `${hrs.toFixed(1)} hrs`;
+    const card = document.getElementById("desootCard");
+    const pill = document.getElementById("desootPill");
+    const dot = document.getElementById("schedDot");
+
+    if (hrs >= 20) {
+      card.classList.add("due");
+      pill.className = "pill pill-warn";
+      pill.innerText = "DE-SOOT DUE";
+      dot.style.display = "block";
+    } else {
+      card.classList.remove("due");
+      pill.className = "pill pill-ok";
+      pill.innerText = "CLEAN";
+      dot.style.display = "none";
+    }
+  }
+
+  function resetSootCounter() {
+    sootData.lowIdleHours = 0.0;
+    safeSet("vevor_soot_v4", sootData);
+    renderSootUI();
+    log("Carbon de-soot counter reset to 0.0 hrs.");
+  }
+
+  async function startDesootBurn() {
+    if (!writeChar) {
+      log("Connect to heater first to run 15-min Max De-Soot.");
+      return;
+    }
+    if (desootTimer) {
+      clearInterval(desootTimer);
+      desootTimer = null;
+      document.getElementById("btnDesoot").innerText = "🔥 RUN 15-MIN MAX DE-SOOT";
+      log("De-soot timer stopped.");
+      return;
+    }
+    prevGearBeforeDesoot = state.rawTarget || 4;
+    log("Starting 15-Min Carbon De-Soot Burn (Lvl 10)...");
+    if (!state.isHeating && state.runCode === "00") {
+      await sendCommand("baab04bba10000");
+      await sleep(800);
+    }
+    if (state.modeHex === "01") {
+      await sendCommand("baab04bbac0000");
+      await sleep(600);
+    }
+    await stepToRawTarget(10);
+
+    desootSecLeft = 15 * 60;
+    const btn = document.getElementById("btnDesoot");
+    desootTimer = setInterval(async () => {
+      desootSecLeft--;
+      const m = Math.floor(desootSecLeft / 60);
+      const s = String(desootSecLeft % 60).padStart(2, "0");
+      btn.innerText = `🔥 DE-SOOTING (${m}:${s}) — TAP TO STOP`;
+      if (desootSecLeft <= 0) {
+        clearInterval(desootTimer);
+        desootTimer = null;
+        btn.innerText = "🔥 RUN 15-MIN MAX DE-SOOT";
+        resetSootCounter();
+        log("De-Soot Complete! Restoring previous level...");
+        await stepToRawTarget(prevGearBeforeDesoot);
+      }
+    }, 1000);
+  }
+
+  function trackLiveBurnAndSoot() {
+    const now = Date.now();
+    const dtHours = Math.min((now - lastTickMs) / 3600000, 0.05);
+    lastTickMs = now;
+    if (!state.isHeating || dtHours <= 0) return;
+
+    const effGear = state.modeHex === "01" ? 3 : (state.rawTarget || 4);
+    const burnedL = burnRateLitersPerHr(effGear) * dtHours;
+    fuelData.remainingL = Math.max(0, +(fuelData.remainingL - burnedL).toFixed(4));
+    safeSet("vevor_fuel_v4", fuelData);
+    renderFuelUI();
+
+    if (state.modeHex === "01" || effGear <= 3) {
+      sootData.lowIdleHours = +(sootData.lowIdleHours + dtHours).toFixed(3);
+    } else if (effGear >= 8) {
+      sootData.lowIdleHours = Math.max(0, +(sootData.lowIdleHours - dtHours * 4).toFixed(3));
+    }
+    safeSet("vevor_soot_v4", sootData);
+    renderSootUI();
+  }
+
+  // ================= BLE HELPERS =================
+  function appendChecksum(hexStr) {
+    const bytes = hexStr.match(/.{1,2}/g).map(b => parseInt(b, 16));
+    const sum = bytes.reduce((acc, v) => acc + v, 0) & 0xff;
+    return new Uint8Array([...bytes, sum]);
+  }
+
+  async function writeRawHex(hexWithoutChecksum) {
+    if (!writeChar) return;
+    await writeChar.writeValue(appendChecksum(hexWithoutChecksum));
+  }
+
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+  async function sendCommand(hexWithoutChecksum) {
+    if (!writeChar) {
+      log("Not connected to heater.");
+      return;
+    }
+    try {
+      log(`TX: ${hexWithoutChecksum.toUpperCase()}`);
+      await writeRawHex(hexWithoutChecksum);
+      await sleep(450);
+      await writeRawHex("baab04cc000000");
+    } catch (e) {
+      log(`TX Err: ${e.message}`);
+    }
+  }
+
+  async function syncClock() {
+    const now = new Date();
+    const hh = now.getHours().toString(16).padStart(2, "0");
+    const mm = now.getMinutes().toString(16).padStart(2, "0");
+    const ss = now.getSeconds().toString(16).padStart(2, "0");
+    const dow = now.getDay().toString(16).padStart(2, "0");
+    await sendCommand(`baab05ea${hh}${mm}${ss}${dow}`);
+  }
+
+  // ================= SCHEDULE & WEATHER =================
+  function calcSlotHours(startStr, stopStr) {
+    const [sh, sm] = startStr.split(":").map(Number);
+    const [eh, em] = stopStr.split(":").map(Number);
+    let diffMin = (eh * 60 + em) - (sh * 60 + sm);
+    if (diffMin <= 0) diffMin += 24 * 60;
+    return diffMin / 60;
+  }
+
+  function renderScheduleRows() {
+    const container = document.getElementById("schedContainer");
+    if (!container) return;
+    container.innerHTML = "";
+
+    const today = new Date();
+    const nowMins = today.getHours() * 60 + today.getMinutes();
+    const gear = getAssumedGear();
+    const rateL = burnRateLitersPerHr(gear);
+
+    const rateDisp = useImperial ? `${(rateL / L_PER_GAL).toFixed(2)} gal/hr` : `${rateL.toFixed(2)} L/hr`;
+    const syncTag = schedSynced
+      ? `<span style="color:var(--green);font-weight:700;">● SYNCED TO HEATER</span>`
+      : `<span style="color:var(--amber);font-weight:700;">● UNSAVED EDITS (Tap Save below)</span>`;
+    document.getElementById("schedNotice").innerHTML = `${syncTag} • Est. Lvl ${gear} (${rateDisp})`;
+
+    let simRemainingL = fuelData.remainingL;
+    let firstRefillDay = null;
+
+    for (let offset = 0; offset < 7; offset++) {
+      const d = new Date(today);
+      d.setDate(today.getDate() + offset);
+      const dow = d.getDay();
+      const slot = weeklySchedule[dow];
+      const dateLabel = d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+      const isoKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+
+      const [sh, sm] = slot.start.split(":").map(Number);
+      const runOccursInFuture = offset > 0 || (sh * 60 + sm) > nowMins;
+      if (slot.enabled && runOccursInFuture) {
+        const hrs = calcSlotHours(slot.start, slot.stop);
+        simRemainingL = Math.max(0, simRemainingL - hrs * rateL);
+      }
+
+      const projPct = Math.round((simRemainingL / fuelData.capacityL) * 100);
+      if (slot.enabled && runOccursInFuture && projPct <= 20 && !firstRefillDay) {
+        firstRefillDay = `${DAY_NAMES[dow]} (${dateLabel})`;
+      }
+
+      let weatherSpan = "";
+      if (weatherByDateISO[isoKey] !== undefined) {
+        const lowC = weatherByDateISO[isoKey];
+        const isFreeze = lowC <= 0.5;
+        weatherSpan = `<span class="${isFreeze ? 'low-freeze' : ''}">${isFreeze ? '❄️' : '🌡️'} ${fmtTempFromC(lowC)}</span>`;
+      }
+      const fuelCls = projPct <= 15 ? "fuel-proj-empty" : projPct <= 30 ? "fuel-proj-low" : "fuel-proj-ok";
+
+      const row = document.createElement("div");
+      row.className = `sched-row ${slot.enabled ? "armed" : ""}`;
+      row.innerHTML = `
+        <div class="sched-top">
+          <div class="sched-day-wrap">
+            <span class="sched-day">${DAY_NAMES[dow]} ${offset === 0 ? "(Today)" : ""}</span>
+            <span class="sched-date">${dateLabel}</span>
+          </div>
+          <button class="toggle-pill ${slot.enabled ? "on" : ""}" onclick="toggleSlot(${dow})">
+            ${slot.enabled ? "ARMED" : "OFF"}
+          </button>
+        </div>
+        <div class="sched-bottom">
+          <div class="sched-times">
+            <input type="time" value="${slot.start}" onchange="updateSlot(${dow}, 'start', this.value)" />
+            <span>→</span>
+            <input type="time" value="${slot.stop}" onchange="updateSlot(${dow}, 'stop', this.value)" />
+          </div>
+          <div class="sched-meta">
+            ${weatherSpan}
+            <span class="${fuelCls}">⛽ ~${projPct}% (${fmtVolFromL(simRemainingL)})</span>
+          </div>
+        </div>
+      `;
+      container.appendChild(row);
+    }
+
+    const alertBox = document.getElementById("refillAlert");
+    if (firstRefillDay) {
+      alertBox.style.display = "block";
+      alertBox.innerText = `⚠️ Tank drops ≤ 20% by ${firstRefillDay} — refill before then!`;
+    } else {
+      alertBox.style.display = "none";
+    }
+  }
+
+  function updateSlot(dow, field, val) {
+    weeklySchedule[dow][field] = val || "05:00";
+    schedSynced = false;
+    safeSet("vevor_sched_v4", weeklySchedule);
+    safeSet("vevor_sched_synced_v4", false);
+    renderScheduleRows();
+  }
+
+  function toggleSlot(dow) {
+    weeklySchedule[dow].enabled = !weeklySchedule[dow].enabled;
+    schedSynced = false;
+    safeSet("vevor_sched_v4", weeklySchedule);
+    safeSet("vevor_sched_synced_v4", false);
+    renderScheduleRows();
+  }
+
+  function resetDefaultSchedule() {
+    weeklySchedule = [
+      { start: "05:00", stop: "07:00", enabled: false },
+      { start: "05:00", stop: "07:00", enabled: true  },
+      { start: "05:00", stop: "07:00", enabled: true  },
+      { start: "05:00", stop: "07:00", enabled: true  },
+      { start: "05:00", stop: "07:00", enabled: true  },
+      { start: "05:00", stop: "07:00", enabled: true  },
+      { start: "05:00", stop: "07:00", enabled: false }
+    ];
+    schedSynced = false;
+    safeSet("vevor_sched_v4", weeklySchedule);
+    safeSet("vevor_sched_synced_v4", false);
+    renderScheduleRows();
+    log("Reset schedule to Mon–Fri 05:00–07:00. Tap Save to push to heater.");
+  }
+
+  async function pushCustomSchedule() {
+    safeSet("vevor_sched_v4", weeklySchedule);
+    if (!writeChar) {
+      schedSynced = false;
+      safeSet("vevor_sched_synced_v4", false);
+      renderScheduleRows();
+      log("Saved locally! Connect to heater to push schedule.");
+      return;
+    }
+    log("Syncing RTC clock & writing 7-day schedule...");
+    await syncClock();
+    await sleep(400);
+
+    let payload = "baab24ed";
+    for (let dow = 0; dow < 7; dow++) {
+      const [sh, sm] = weeklySchedule[dow].start.split(":").map(Number);
+      const [eh, em] = weeklySchedule[dow].stop.split(":").map(Number);
+      const flag = weeklySchedule[dow].enabled ? "11" : "10";
+      payload += sh.toString(16).padStart(2, "0")
+              +  sm.toString(16).padStart(2, "0")
+              +  eh.toString(16).padStart(2, "0")
+              +  em.toString(16).padStart(2, "0")
+              +  flag;
+    }
+    await sendCommand(payload);
+    schedSynced = true;
+    safeSet("vevor_sched_synced_v4", true);
+    renderScheduleRows();
+    log("✅ 7-Day Schedule Synced to Heater ECU!");
+  }
+
+  async function armQuick5AM() {
+    for (let d = 0; d < 7; d++) {
+      weeklySchedule[d] = { start: "05:00", stop: "07:00", enabled: true };
+    }
+    await pushCustomSchedule();
+  }
+
+  async function loadWeatherLows() {
+    if (window.location.protocol === "content:") {
+      log("Weather blocked by Android 'content://' file preview. Works automatically once hosted on GitHub Pages (https://)!");
+      alert("Android blocks internet weather lookups when opened from 'content://' Downloads preview.\n\nOnce hosted on GitHub Pages (https://), this button loads 7-day overnight lows for your exact GPS location!");
+      return;
+    }
+    log("Fetching 7-day overnight lows...");
+    let lat = 44.6082, lon = -79.4197;
+    if (navigator.geolocation) {
+      try {
+        const pos = await new Promise((res, rej) =>
+          navigator.geolocation.getCurrentPosition(res, rej, { timeout: 3500 })
+        );
+        lat = pos.coords.latitude.toFixed(3);
+        lon = pos.coords.longitude.toFixed(3);
+      } catch (_) {}
+    }
+    try {
+      const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_min&timezone=auto`;
+      const resp = await fetch(url);
+      const data = await resp.json();
+      if (data.daily && data.daily.time) {
+        data.daily.time.forEach((iso, idx) => {
+          weatherByDateISO[iso] = data.daily.temperature_2m_min[idx];
+        });
+        log("Loaded 7-day overnight lows!");
+        renderScheduleRows();
+      }
+    } catch (err) {
+      log("Couldn't reach weather service (check internet connection).");
+    }
+  }
+
+  // ================= POWER, SLIDER & TELEMETRY =================
+  async function togglePower() {
+    if (state.runCode === "02") {
+      log("Wait for COOLING purge to finish before restarting.");
+      return;
+    }
+    await sendCommand("baab04bba10000");
+  }
+
+  async function toggleMode() {
+    const cmd = state.modeHex === "01" ? "baab04bbac0000" : "baab04bbad0000";
+    await sendCommand(cmd);
+  }
+
+  function getTargetInDisplayUnits(rawVal) {
+    if (state.modeHex !== "01") return rawVal;
+    const rawInC = state.ecuIsFahrenheit ? fToC(rawVal) : rawVal;
+    return useImperial ? cToF(rawInC) : rawInC;
+  }
+
+  function displayUnitsToRawTarget(dispVal) {
+    if (state.modeHex !== "01") return dispVal;
+    const valInC = useImperial ? fToC(dispVal) : dispVal;
+    return state.ecuIsFahrenheit ? cToF(valInC) : valInC;
+  }
+
+  function onSliderPreview(val) {
+    const unit = useImperial ? "°F" : "°C";
+    document.getElementById("valTarget").innerText =
+      state.modeHex === "01" ? `${val} ${unit}` : `Lvl ${val}`;
+  }
+
+  async function adjustLevel(delta) {
+    if (!writeChar) return;
+    const cmd = delta > 0 ? "baab04bba20000" : "baab04bba30000";
+    await sendCommand(cmd);
+  }
+
+  async function stepToRawTarget(targetRaw) {
+    const diff = targetRaw - state.rawTarget;
+    if (diff === 0 || !writeChar) return;
+    const stepCmd = diff > 0 ? "baab04bba20000" : "baab04bba30000";
+    const steps = Math.min(Math.abs(diff), 20);
+    log(`Stepping ${diff > 0 ? '+' : '-'}${steps}...`);
+    for (let i = 0; i < steps; i++) {
+      await writeRawHex(stepCmd);
+      await sleep(320);
+    }
+    await writeRawHex("baab04cc000000");
+  }
+
+  async function onSliderCommit(dispVal) {
+    const rawTarget = displayUnitsToRawTarget(parseInt(dispVal, 10));
+    await stepToRawTarget(rawTarget);
+  }
+
+  function updateBatteryUI(volts) {
+    if (volts === null) return;
+    document.getElementById("valVoltage").innerText = `${volts.toFixed(1)} V`;
+    const pill = document.getElementById("battPill");
+    pill.style.display = "inline-block";
+
+    if (volts >= 13.2) {
+      pill.className = "pill pill-ok";
+      pill.innerText = "CHARGING";
+    } else if (volts >= 12.1) {
+      pill.className = "pill pill-ok";
+      pill.innerText = "BATT OK";
+    } else if (volts >= 11.6) {
+      pill.className = "pill pill-warn";
+      pill.innerText = "CHARGE SOON";
+    } else {
+      pill.className = "pill pill-low";
+      pill.innerText = "LOW BATT!";
+    }
+  }
+
+  function renderTelemetryUI() {
+    const slider = document.getElementById("sliderTarget");
+    if (state.modeHex === "01") {
+      slider.min = useImperial ? 46 : 8;
+      slider.max = useImperial ? 97 : 36;
+      document.getElementById("lblSliderTitle").innerText = `TARGET THERMOSTAT (${useImperial ? '46–97°F' : '8–36°C'})`;
+    } else {
+      slider.min = 1;
+      slider.max = 10;
+      document.getElementById("lblSliderTitle").innerText = "TARGET PUMP GEAR (1–10)";
+    }
+
+    if (!state.hasTelemetry) {
+      document.getElementById("valAmbient").innerText = `-- ${useImperial ? '°F' : '°C'}`;
+      document.getElementById("valCase").innerText = `-- ${useImperial ? '°F' : '°C'}`;
+      return;
+    }
+
+    const modeStr = state.modeHex === "00" ? "GEAR" : state.modeHex === "01" ? "THERMO" : "FAULT";
+    document.getElementById("valState").innerText = `${state.runStateStr} (${modeStr})`;
+    document.getElementById("lblMode").innerText = modeStr;
+    document.getElementById("valAmbient").innerText = fmtTempFromC(state.ambientC);
+    document.getElementById("valCase").innerText = fmtTempFromC(state.caseC);
+    updateBatteryUI(state.volts);
+
+    document.getElementById("btnVent").className = state.runCode === "04" ? "btn btn-vent active" : "btn btn-vent";
+
+    const btnPower = document.getElementById("btnPower");
+    if (state.runCode === "02") {
+      btnPower.className = "btn btn-power cooling";
+      btnPower.innerText = `❄️ COOLING (${fmtTempFromC(state.caseC)}) — LOCKED`;
+      btnPower.disabled = true;
+    } else {
+      btnPower.disabled = false;
+      btnPower.className = state.isHeating ? "btn btn-power active" : "btn btn-power";
+      btnPower.innerText = state.isHeating ? "HEATER RUNNING (TAP TO STOP)" : `POWER: ${state.runStateStr} (TAP TO START)`;
+    }
+
+    const faultBanner = document.getElementById("faultBanner");
+    if (state.isFault) {
+      faultBanner.style.display = "block";
+      faultBanner.innerText = FAULT_MAP[state.faultCode] || `FAULT CODE: E-${state.faultCode}`;
+    } else {
+      faultBanner.style.display = "none";
+      const dispTarget = getTargetInDisplayUnits(state.rawTarget);
+      slider.value = dispTarget;
+      document.getElementById("valTarget").innerText =
+        state.modeHex === "01" ? `${dispTarget} ${useImperial ? '°F' : '°C'}` : `Lvl ${dispTarget}`;
+    }
+  }
+
+  function refreshAllDisplays() {
+    document.getElementById("btnUnit").innerText = useImperial ? "°F" : "°C";
+    renderTelemetryUI();
+    renderFuelUI();
+    renderScheduleRows();
+    renderSootUI();
+  }
+
+  function onNotification(event) {
+    const u8 = new Uint8Array(event.target.value.buffer);
+    const hexArr = Array.from(u8).map(b => b.toString(16).padStart(2, "0").toLowerCase());
+    const fullHex = hexArr.join("");
+
+    if (fullHex.startsWith("abba11cc")) {
+      state.hasTelemetry = true;
+      const statusMap = { "00": "OFF", "01": "HEATING", "02": "COOLING", "04": "VENTING", "06": "PAUSED" };
+      state.runCode = hexArr[4];
+      state.runStateStr = statusMap[state.runCode] || `UNK (${state.runCode})`;
+      state.isHeating = state.runCode === "01";
+
+      state.isFault = hexArr[5] === "ff";
+      state.modeHex = hexArr[5];
+      const rawVal6 = parseInt(hexArr[6], 16);
+      if (state.isFault) state.faultCode = rawVal6;
+      else state.rawTarget = rawVal6;
+
+      const b8 = parseInt(hexArr[8], 16);
+      const b9 = parseInt(hexArr[9], 16);
+      const combined16 = (b8 << 8) | b9;
+      if (combined16 >= 90 && combined16 <= 320) state.volts = combined16 / 10.0;
+      else if (b9 >= 8 && b9 <= 32 && b8 <= 9) state.volts = b9 + (b8 / 10.0);
+      else state.volts = b9;
+
+      state.ecuIsFahrenheit = hexArr[10] !== "00";
+      const rawAmb = parseInt(hexArr[11], 16) - (state.ecuIsFahrenheit ? 22 : 30);
+      const rawCase = parseInt(hexArr[12] + hexArr[13], 16);
+
+      state.ambientC = state.ecuIsFahrenheit ? (rawAmb - 32) * 5 / 9 : rawAmb;
+      state.caseC = state.ecuIsFahrenheit ? (rawCase - 32) * 5 / 9 : rawCase;
+
+      renderTelemetryUI();
+      trackLiveBurnAndSoot();
+    }
+  }
+
+  async function bindServices(server) {
+    const services = await server.getPrimaryServices();
+    for (const svc of services) {
+      const chars = await svc.getCharacteristics();
+      for (const c of chars) {
+        if (c.properties.notify) {
+          await c.startNotifications();
+          c.addEventListener("characteristicvaluechanged", onNotification);
+        }
+        if (c.uuid.includes("fff2") || c.uuid.includes("ffe1")) {
+          writeChar = c;
+        }
+      }
+    }
+  }
+
+  async function toggleConnect() {
+    if (bleDevice && bleDevice.gatt.connected) {
+      bleDevice.gatt.disconnect();
+      return;
+    }
+    try {
+      log("Scanning for BLE Heater...");
+      bleDevice = await navigator.bluetooth.requestDevice({
+        filters: [{ services: [0xfff0] }, { services: [0xffe0] }, { namePrefix: "BT_" }, { namePrefix: "Heater" }, { namePrefix: "@" }],
+        optionalServices: [0xfff0, 0xffe0]
+      });
+      bleDevice.addEventListener("gattserverdisconnected", onDisconnected);
+      const server = await bleDevice.gatt.connect();
+      await bindServices(server);
+
+      lastTickMs = Date.now();
+      document.getElementById("connBadge").className = "badge connected";
+      document.getElementById("connBadge").innerText = bleDevice.name || "ONLINE";
+      document.getElementById("btnConnect").innerText = "DISCONNECT";
+
+      await sleep(400);
+      await syncClock();
+      pollInterval = setInterval(() => writeRawHex("baab04cc000000"), 2500);
+    } catch (err) {
+      log(`BLE Error: ${err.message}`);
+    }
+  }
+
+  function onDisconnected() {
+    clearInterval(pollInterval);
+    writeChar = null;
+    document.getElementById("connBadge").className = "badge";
+    document.getElementById("connBadge").innerText = "OFFLINE";
+    document.getElementById("btnConnect").innerText = "CONNECT HEATER";
+    log("Disconnected.");
+  }
+
+  document.addEventListener("visibilitychange", async () => {
+    if (document.visibilityState === "visible" && bleDevice && !bleDevice.gatt.connected) {
+      log("Phone unlocked — auto-reconnecting...");
+      try {
+        const server = await bleDevice.gatt.connect();
+        await bindServices(server);
+        lastTickMs = Date.now();
+        document.getElementById("connBadge").className = "badge connected";
+        document.getElementById("connBadge").innerText = bleDevice.name || "ONLINE";
+        document.getElementById("btnConnect").innerText = "DISCONNECT";
+        clearInterval(pollInterval);
+        pollInterval = setInterval(() => writeRawHex("baab04cc000000"), 2500);
+        await writeRawHex("baab04cc000000");
+      } catch (e) {
+        log("Out of range or asleep. Tap Connect.");
+      }
+    }
+  });
+
+  // Init UI on load
+  refreshAllDisplays();
+</script>
+</body>
+</html>
