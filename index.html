@@ -7,7 +7,7 @@
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <title>8KW Trailer Heater Controller</title>
+  <title>Trailer Diesel Heater Controller</title>
   <style>
     :root {
       --bg: #0d0f12;
@@ -149,15 +149,15 @@
 
     .fault-banner {
       display: none;
-      background: rgba(255, 23, 68, 0.15);
+      background: rgba(255, 23, 68, 0.18);
       border: 2px solid var(--red);
       color: #ff8a80;
-      padding: 11px;
+      padding: 12px;
       border-radius: 8px;
-      font-weight: 700;
+      font-weight: 800;
       text-align: center;
       margin-bottom: 12px;
-      font-size: 0.85rem;
+      font-size: 0.88rem;
     }
 
     /* Telemetry Grid */
@@ -187,7 +187,7 @@
     .pill {
       font-size: 0.6rem;
       font-weight: 800;
-      padding: 2px 5px;
+      padding: 2px 6px;
       border-radius: 4px;
       letter-spacing: 0.3px;
       white-space: nowrap;
@@ -195,6 +195,27 @@
     .pill-ok { background: rgba(0,230,118,0.12); color: var(--green); border: 1px solid var(--green); }
     .pill-warn { background: rgba(255,171,0,0.16); color: var(--amber); border: 1px solid var(--amber); }
     .pill-low { background: rgba(255,23,68,0.2); color: #ff8a80; border: 1px solid var(--red); }
+
+    /* CO Safety Card */
+    .co-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 14px;
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+    .co-card.danger {
+      border-color: var(--red);
+      background: rgba(255, 23, 68, 0.14);
+    }
+    .co-card.warn {
+      border-color: var(--amber);
+      background: rgba(255, 171, 0, 0.1);
+    }
 
     /* Fuel Card */
     .fuel-card {
@@ -295,12 +316,20 @@
       background: rgba(255, 171, 0, 0.12);
       border-color: var(--amber);
       color: var(--amber);
+      margin-bottom: 10px;
+    }
+    .btn-danger-outline {
+      background: rgba(255, 23, 68, 0.08);
+      border-color: rgba(255, 23, 68, 0.6);
+      color: #ff8a80;
       margin-bottom: 12px;
+      font-size: 0.82rem;
+      padding: 11px;
     }
 
-    /* Schedule Tab — Compact 2-Line Mobile Fit (Zero Horizontal Overflow) */
+    /* Schedule Tab */
     .sched-bar { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
-    .btn-sm { padding: 10px 8px; font-size: 0.76rem; }
+    .btn-sm { padding: 10px 8px; font-size: 0.75rem; }
     .refill-alert {
       display: none;
       background: rgba(255, 171, 0, 0.14);
@@ -427,6 +456,15 @@
     .guide-card ul { padding-left: 18px; margin-top: 4px; }
     .guide-card li { margin-bottom: 5px; }
 
+    .log-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.68rem;
+      color: var(--muted);
+      margin-bottom: 4px;
+      padding: 0 2px;
+    }
     .log {
       background: #08090b;
       border: 1px solid var(--border);
@@ -434,9 +472,10 @@
       padding: 9px;
       font-size: 0.68rem;
       color: #6c7786;
-      height: 76px;
+      height: 82px;
       overflow-y: auto;
       font-family: monospace;
+      word-break: break-all;
     }
   </style>
 </head>
@@ -494,6 +533,15 @@
       </div>
     </div>
 
+    <!-- Carbon Monoxide (CO) Safety Status Bar -->
+    <div id="coCard" class="co-card">
+      <div>
+        <div class="card-label">🛡️ CARBON MONOXIDE (CO) MONITOR</div>
+        <div id="valCoText" style="font-size:0.86rem;font-weight:800;margin-top:3px;color:var(--text);">Connect to verify CO status</div>
+      </div>
+      <span id="coPill" class="pill pill-ok" style="display:none;">SAFE</span>
+    </div>
+
     <!-- Clickable Fuel Tank Card -->
     <div class="fuel-card" onclick="openFuelModal()">
       <div class="card-top">
@@ -529,20 +577,20 @@
     </div>
 
     <button class="btn btn-timer" onclick="armQuick5AM()">
-      ⚡ QUICK ARM: 05:00–07:00 AM (ALL DAYS)
+      ⚡ QUICK ARM: 05:00–07:00 AM (ALL 7 DAYS)
     </button>
   </div>
 
   <!-- ================= TAB 2: SCHEDULE, WEATHER & DE-SOOT ================= -->
   <div id="view-schedule" class="view">
     <div class="sched-bar">
-      <button class="btn btn-sm" style="border-color:var(--ice);color:var(--ice)" onclick="loadWeatherLows()">🌡️ LOAD 7-DAY LOWS</button>
-      <button class="btn btn-sm" onclick="resetDefaultSchedule()">↺ RESET Mon–Fri 5AM</button>
+      <button class="btn btn-sm" onclick="checkHeaterSchedule()">🔍 CHECK SCHEDULE</button>
+      <button class="btn btn-sm" style="border-color:var(--ice);color:var(--ice)" onclick="loadWeatherLows()">🌡️ 7-DAY LOWS</button>
     </div>
 
     <div id="refillAlert" class="refill-alert"></div>
 
-    <div id="schedNotice" style="font-size:0.73rem;color:var(--muted);margin-bottom:10px;text-align:center;">
+    <div id="schedNotice" style="font-size:0.73rem;color:var(--muted);margin-bottom:10px;text-align:center;line-height:1.4;">
       Toggle workdays ON/OFF & tap <b>Save Schedule to Heater</b>.
     </div>
 
@@ -550,6 +598,10 @@
 
     <button id="btnSaveSched" class="btn btn-timer" onclick="pushCustomSchedule()">
       💾 SAVE SCHEDULE TO HEATER
+    </button>
+
+    <button class="btn btn-danger-outline" onclick="clearAllTimersOnHeater()">
+      🚫 CLEAR & DISABLE ALL TIMERS ON HEATER
     </button>
 
     <!-- Carbon De-Soot Tracker -->
@@ -582,43 +634,37 @@
   <!-- ================= TAB 3: QUICK USER GUIDE ================= -->
   <div id="view-guide" class="view">
     <div class="guide-card">
-      <h3>🌡️ °C / °F Toggle & Home Screen App</h3>
+      <h3>📲 Always Open From One Link (GitHub App)</h3>
       <ul>
-        <li>Tap the <b>°C / °F</b> button in the top header to switch temperatures and fuel units (Liters ↔ US Gallons) across the entire app.</li>
-        <li>Tap <b>📲 APP</b> at the top right (or Chrome's <b>⋮ → Add to Home screen</b>) to install as a full-screen icon on your phone.</li>
+        <li>Use your <b>https:// GitHub Pages link</b> (rather than switching back and forth to a local phone file) so your browser keeps a single unified memory of your schedule and fuel tank!</li>
+        <li>Tap <b>°C / °F</b> in the top bar to switch between Celsius/Liters and Fahrenheit/Gallons.</li>
       </ul>
     </div>
 
     <div class="guide-card">
-      <h3>⛽ Fuel Tank Estimator & Schedule Forecast</h3>
+      <h3>⏰ Reliable Hardware Scheduling & Clearing</h3>
       <ul>
-        <li>Tap the <b>Diesel Tank card</b> to enter your tank size (Vevor CY5004 is <b>5.0 L / 1.32 gal</b>) and match the % to your side sight glass (100%, 70%, 50%, 20%).</li>
-        <li>Fuel consumption scales from <b>0.16 L/hr (0.04 gal/hr)</b> on Lvl 1 up to <b>0.52 L/hr (0.14 gal/hr)</b> on Lvl 10.</li>
-        <li>The <b>Schedule</b> tab forecasts your remaining fuel after each scheduled morning run and warns you before the tank hits 20%.</li>
+        <li>Long schedule packets (40 bytes) are automatically split into 20-byte Bluetooth Low Energy chunks so your heater never misses an update.</li>
+        <li>Want to be 100% sure the heater won't wake up tomorrow? Tap <b>🚫 CLEAR & DISABLE ALL TIMERS ON HEATER</b> on the Schedule tab—it zeroes out every timer byte on the ECU.</li>
+        <li>Tap <b>🔍 CHECK SCHEDULE</b> while connected to query the ECU's active timer table (or verify the last synced timestamp if your board revision uses write-only timer memory).</li>
+      </ul>
+    </div>
+
+    <div class="guide-card">
+      <h3>🛡️ Carbon Monoxide (CO) & Safety Cutoffs</h3>
+      <ul>
+        <li><b>CO Monitor:</b> Displays live CO PPM if broadcast by your heater's BLE sensor, or monitors for hardware CO cutoff (<code>Fault E-CO</code>), which automatically kills fuel and purges the chamber. Always keep a standalone battery CO detector in enclosed sleeping spaces as a secondary backup.</li>
+        <li><b>Cooldown Lockout (3–5 mins):</b> After tapping STOP, the fan stays on until the Heat Exchanger drops below <b>~55°C (131°F)</b>. Never cut 12V battery power while hot (<b>190°C+ / 375°F+</b>)!</li>
       </ul>
     </div>
 
     <div class="guide-card">
       <h3>🎛️ GEAR vs. THERMO vs. FAN / VENT</h3>
       <ul>
-        <li><b>GEAR Mode:</b> Locks the fuel pump to a fixed heat output (<code>Lvl 1–10</code>). Best for predictable morning pre-heats in uninsulated trailers.</li>
-        <li><b>THERMO Mode:</b> Targets a set room temp (<b>8°C–36°C / 46°F–97°F</b>). Once reached, the heater idles down to Lvl 1 rather than shutting completely off.</li>
-        <li><b>FAN / VENT:</b> Runs <b>only the blower fan</b> with zero fuel and zero heat. Use it to air out fumes or circulate air in warm weather.</li>
+        <li><b>GEAR Mode:</b> Fixed fuel pump speed (<code>Lvl 1</code> = 0.16 L/h / 0.04 gal/h up to <code>Lvl 10</code> = 0.52 L/h / 0.14 gal/h).</li>
+        <li><b>THERMO Mode:</b> Targets <b>8°C–36°C (46°F–97°F)</b> and throttles down to Lvl 1 idle once reached.</li>
+        <li><b>FAN / VENT:</b> Runs <b>only the blower fan</b> with zero fuel and zero heat.</li>
       </ul>
-    </div>
-
-    <div class="guide-card">
-      <h3>❄️ Cooldown Lockout & 12V Battery</h3>
-      <ul>
-        <li><b>Cooldown Cycle (3–5 mins):</b> After tapping STOP, the blower fan stays on until the Heat Exchanger cools below <b>~55°C (131°F)</b>. Restart commands are ignored by the heater until cooldown finishes!</li>
-        <li><b>⚠️ NEVER Cut 12V Power While Hot:</b> Cutting battery power at <b>190°C+ (375°F+)</b> stops the cooling fan and can melt the housing or fry the ECU. Overheat cutoff (<code>E-05</code>) triggers at <b>230°C–270°C (446°F–518°F)</b>.</li>
-        <li><b>CHARGE SOON Pill:</b> Glow-plug startup pulls <b>10A–12A</b>. Plug in your battery maintainer if resting voltage drops to <b>≤12.0V</b> so ignition load doesn't trip an <code>E-02</code> fault.</li>
-      </ul>
-    </div>
-
-    <div class="guide-card">
-      <h3>⏰ Weekly Hardware Timer & Weather Lows</h3>
-      <p>Saving a schedule programs the heater's internal clock chip—<b>your phone does NOT need to be near the trailer at 5:00 AM</b>. Note: Heater boards don't broadcast saved schedules back over Bluetooth, so this app remembers your saved schedule and shows <b>SYNCED</b> once pushed. (Note: <b>7-Day Lows</b> requires opening the app over <code>https://</code> rather than an offline local file preview).</p>
     </div>
   </div>
 
@@ -652,7 +698,7 @@
     <div class="modal">
       <h3>📲 Add Controller to Home Screen</h3>
       <p style="font-size:0.84rem;color:#c5cdd8;line-height:1.5;margin-bottom:14px;">
-        1. Open this controller via its <b>https://</b> web link in Chrome.<br>
+        1. Open this controller from your <b>https:// GitHub link</b> in Chrome.<br>
         2. Tap Chrome's <b>⋮</b> menu in the top-right corner.<br>
         3. Tap <b>Add to Home screen</b> (or <b>Install app</b>).
       </p>
@@ -660,10 +706,14 @@
     </div>
   </div>
 
+  <div class="log-header">
+    <span>BLE ACTIVITY LOG</span>
+    <span style="cursor:pointer;color:var(--blue);" onclick="showRawHex = !showRawHex; log('Raw BLE hex logging: ' + (showRawHex ? 'ON' : 'OFF'))">📡 Toggle Raw Hex</span>
+  </div>
   <div id="logBox" class="log">Ready. Click Connect Heater...</div>
 
 <script>
-  // ================= SAFE STORAGE WRAPPER (Fixes Android content:// crash!) =================
+  // ================= SAFE STORAGE WRAPPER =================
   const memStore = {};
   function safeGet(key, fallback) {
     try {
@@ -722,7 +772,8 @@
 
   // ================= UNIT CONVERSION (°C/L <-> °F/gal) =================
   const L_PER_GAL = 3.78541;
-  let useImperial = safeGet("vevor_imperial_v4", false); // false = °C + Liters, true = °F + Gallons
+  let useImperial = safeGet("vevor_imperial_v5", false);
+  let showRawHex = false;
 
   function cToF(c) { return Math.round(c * 9 / 5 + 32); }
   function fToC(f) { return Math.round((f - 32) * 5 / 9); }
@@ -735,8 +786,7 @@
   }
   function toggleUnitSystem() {
     useImperial = !useImperial;
-    safeSet("vevor_imperial_v4", useImperial);
-    document.getElementById("btnUnit").innerText = useImperial ? "°F" : "°C";
+    safeSet("vevor_imperial_v5", useImperial);
     refreshAllDisplays();
   }
 
@@ -751,7 +801,7 @@
     8: "E-08: Flameout (Check Diesel Level / Air Bubbles)",
     9: "E-09: Temperature Sensor Fault",
     10: "E-10: Ignition Startup Failed",
-    11: "E-CO: Carbon Monoxide Alarm!"
+    11: "🚨 E-CO: CARBON MONOXIDE ALARM! VENTILATE IMMEDIATELY!"
   };
   const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
@@ -763,6 +813,8 @@
   let bleDevice = null;
   let writeChar = null;
   let pollInterval = null;
+  let rxBuffer = "";
+  let awaitingScheduleRead = false;
   let lastTickMs = Date.now();
   let desootTimer = null;
   let desootSecLeft = 0;
@@ -777,25 +829,26 @@
     faultCode: 0,
     modeHex: "00",
     ecuIsFahrenheit: false,
-    rawTarget: 4,      // Raw value reported by ECU (1-10 in Gear, °C or °F in Thermo)
+    rawTarget: 4,
     ambientC: null,
     caseC: null,
-    volts: null
+    volts: null,
+    coPpm: null
   };
 
-  let fuelData = safeGet("vevor_fuel_v4", { capacityL: 5.0, remainingL: 4.45 });
-  let sootData = safeGet("vevor_soot_v4", { lowIdleHours: 0.0 });
-  let schedSynced = safeGet("vevor_sched_synced_v4", false);
-  let weeklySchedule = safeGet("vevor_sched_v4", [
+  let fuelData = safeGet("vevor_fuel_v5", safeGet("vevor_fuel_v4", { capacityL: 5.0, remainingL: 4.45 }));
+  let sootData = safeGet("vevor_soot_v5", safeGet("vevor_soot_v4", { lowIdleHours: 0.0 }));
+  let schedMeta = safeGet("vevor_sched_meta_v5", { synced: false, lastSyncStr: "Never synced from this browser", ecuVerified: false });
+  let weeklySchedule = safeGet("vevor_sched_v5", safeGet("vevor_sched_v4", [
     { start: "05:00", stop: "07:00", enabled: false },
-    { start: "05:00", stop: "07:00", enabled: true  },
-    { start: "05:00", stop: "07:00", enabled: true  },
-    { start: "05:00", stop: "07:00", enabled: true  },
-    { start: "05:00", stop: "07:00", enabled: true  },
-    { start: "05:00", stop: "07:00", enabled: true  },
+    { start: "05:00", stop: "07:00", enabled: false },
+    { start: "05:00", stop: "07:00", enabled: false },
+    { start: "05:00", stop: "07:00", enabled: false },
+    { start: "05:00", stop: "07:00", enabled: false },
+    { start: "05:00", stop: "07:00", enabled: false },
     { start: "05:00", stop: "07:00", enabled: false }
-  ]);
-  let weatherByDateISO = {}; // Stored in °C
+  ]));
+  let weatherByDateISO = {};
 
   function switchTab(tabId, btnEl) {
     document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
@@ -812,6 +865,55 @@
     const el = document.getElementById("logBox");
     const ts = new Date().toLocaleTimeString();
     el.innerHTML = `[${ts}] ${msg}<br>` + el.innerHTML;
+  }
+
+  // ================= BLE CHUNKED WRITER (Fixes 40-Byte Schedule Drop!) =================
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+  function appendChecksum(hexStr) {
+    const bytes = hexStr.match(/.{1,2}/g).map(b => parseInt(b, 16));
+    const sum = bytes.reduce((acc, v) => acc + v, 0) & 0xff;
+    return new Uint8Array([...bytes, sum]);
+  }
+
+  async function writeRawHex(hexWithoutChecksum) {
+    if (!writeChar) return;
+    const packet = appendChecksum(hexWithoutChecksum);
+    // Split packets > 20 bytes into 20-byte BLE MTU chunks so schedule writes never truncate!
+    const MTU = 20;
+    for (let offset = 0; offset < packet.length; offset += MTU) {
+      const chunk = packet.slice(offset, offset + MTU);
+      if (writeChar.properties.write) {
+        await writeChar.writeValue(chunk);
+      } else {
+        await writeChar.writeValueWithoutResponse(chunk);
+      }
+      if (offset + MTU < packet.length) await sleep(65);
+    }
+  }
+
+  async function sendCommand(hexWithoutChecksum) {
+    if (!writeChar) {
+      log("Not connected to heater.");
+      return;
+    }
+    try {
+      log(`TX (${(hexWithoutChecksum.length / 2) + 1}B): ${hexWithoutChecksum.toUpperCase()}`);
+      await writeRawHex(hexWithoutChecksum);
+      await sleep(450);
+      await writeRawHex("baab04cc000000");
+    } catch (e) {
+      log(`TX Err: ${e.message}`);
+    }
+  }
+
+  async function syncClock() {
+    const now = new Date();
+    const hh = now.getHours().toString(16).padStart(2, "0");
+    const mm = now.getMinutes().toString(16).padStart(2, "0");
+    const ss = now.getSeconds().toString(16).padStart(2, "0");
+    const dow = now.getDay().toString(16).padStart(2, "0");
+    await sendCommand(`baab05ea${hh}${mm}${ss}${dow}`);
   }
 
   // ================= FUEL TANK UI & MODAL =================
@@ -877,7 +979,7 @@
     const pct = Math.max(0, Math.min(100, parseFloat(document.getElementById("inpFuelPct").value) || 0));
     fuelData.capacityL = +capL.toFixed(2);
     fuelData.remainingL = +(capL * (pct / 100)).toFixed(2);
-    safeSet("vevor_fuel_v4", fuelData);
+    safeSet("vevor_fuel_v5", fuelData);
     refreshAllDisplays();
     closeFuelModal();
     log(`Tank set: ${pct}% (${fmtVolFromL(fuelData.remainingL)})`);
@@ -906,7 +1008,7 @@
 
   function resetSootCounter() {
     sootData.lowIdleHours = 0.0;
-    safeSet("vevor_soot_v4", sootData);
+    safeSet("vevor_soot_v5", sootData);
     renderSootUI();
     log("Carbon de-soot counter reset to 0.0 hrs.");
   }
@@ -962,7 +1064,7 @@
     const effGear = state.modeHex === "01" ? 3 : (state.rawTarget || 4);
     const burnedL = burnRateLitersPerHr(effGear) * dtHours;
     fuelData.remainingL = Math.max(0, +(fuelData.remainingL - burnedL).toFixed(4));
-    safeSet("vevor_fuel_v4", fuelData);
+    safeSet("vevor_fuel_v5", fuelData);
     renderFuelUI();
 
     if (state.modeHex === "01" || effGear <= 3) {
@@ -970,49 +1072,11 @@
     } else if (effGear >= 8) {
       sootData.lowIdleHours = Math.max(0, +(sootData.lowIdleHours - dtHours * 4).toFixed(3));
     }
-    safeSet("vevor_soot_v4", sootData);
+    safeSet("vevor_soot_v5", sootData);
     renderSootUI();
   }
 
-  // ================= BLE HELPERS =================
-  function appendChecksum(hexStr) {
-    const bytes = hexStr.match(/.{1,2}/g).map(b => parseInt(b, 16));
-    const sum = bytes.reduce((acc, v) => acc + v, 0) & 0xff;
-    return new Uint8Array([...bytes, sum]);
-  }
-
-  async function writeRawHex(hexWithoutChecksum) {
-    if (!writeChar) return;
-    await writeChar.writeValue(appendChecksum(hexWithoutChecksum));
-  }
-
-  const sleep = ms => new Promise(r => setTimeout(r, ms));
-
-  async function sendCommand(hexWithoutChecksum) {
-    if (!writeChar) {
-      log("Not connected to heater.");
-      return;
-    }
-    try {
-      log(`TX: ${hexWithoutChecksum.toUpperCase()}`);
-      await writeRawHex(hexWithoutChecksum);
-      await sleep(450);
-      await writeRawHex("baab04cc000000");
-    } catch (e) {
-      log(`TX Err: ${e.message}`);
-    }
-  }
-
-  async function syncClock() {
-    const now = new Date();
-    const hh = now.getHours().toString(16).padStart(2, "0");
-    const mm = now.getMinutes().toString(16).padStart(2, "0");
-    const ss = now.getSeconds().toString(16).padStart(2, "0");
-    const dow = now.getDay().toString(16).padStart(2, "0");
-    await sendCommand(`baab05ea${hh}${mm}${ss}${dow}`);
-  }
-
-  // ================= SCHEDULE & WEATHER =================
+  // ================= SCHEDULE, ECU CHECK & WEATHER =================
   function calcSlotHours(startStr, stopStr) {
     const [sh, sm] = startStr.split(":").map(Number);
     const [eh, em] = stopStr.split(":").map(Number);
@@ -1031,11 +1095,15 @@
     const gear = getAssumedGear();
     const rateL = burnRateLitersPerHr(gear);
 
-    const rateDisp = useImperial ? `${(rateL / L_PER_GAL).toFixed(2)} gal/hr` : `${rateL.toFixed(2)} L/hr`;
-    const syncTag = schedSynced
-      ? `<span style="color:var(--green);font-weight:700;">● SYNCED TO HEATER</span>`
-      : `<span style="color:var(--amber);font-weight:700;">● UNSAVED EDITS (Tap Save below)</span>`;
-    document.getElementById("schedNotice").innerHTML = `${syncTag} • Est. Lvl ${gear} (${rateDisp})`;
+    const activeCount = weeklySchedule.filter(s => s.enabled).length;
+    let statusHtml = "";
+    if (schedMeta.synced) {
+      const badgeTxt = schedMeta.ecuVerified ? "✅ VERIFIED FROM ECU" : `✅ SYNCED (${schedMeta.lastSyncStr})`;
+      statusHtml = `<span style="color:var(--green);font-weight:700;">${badgeTxt}</span> • ${activeCount === 0 ? 'All Timers OFF' : activeCount + ' day(s) armed'}`;
+    } else {
+      statusHtml = `<span style="color:var(--amber);font-weight:700;">● UNSAVED EDITS</span> — Tap Save below to program heater`;
+    }
+    document.getElementById("schedNotice").innerHTML = statusHtml;
 
     let simRemainingL = fuelData.remainingL;
     let firstRefillDay = null;
@@ -1104,68 +1172,119 @@
     }
   }
 
+  function markUnsaved() {
+    schedMeta.synced = false;
+    schedMeta.ecuVerified = false;
+    safeSet("vevor_sched_v5", weeklySchedule);
+    safeSet("vevor_sched_meta_v5", schedMeta);
+    renderScheduleRows();
+  }
+
   function updateSlot(dow, field, val) {
     weeklySchedule[dow][field] = val || "05:00";
-    schedSynced = false;
-    safeSet("vevor_sched_v4", weeklySchedule);
-    safeSet("vevor_sched_synced_v4", false);
-    renderScheduleRows();
+    markUnsaved();
   }
 
   function toggleSlot(dow) {
     weeklySchedule[dow].enabled = !weeklySchedule[dow].enabled;
-    schedSynced = false;
-    safeSet("vevor_sched_v4", weeklySchedule);
-    safeSet("vevor_sched_synced_v4", false);
-    renderScheduleRows();
+    markUnsaved();
   }
 
-  function resetDefaultSchedule() {
-    weeklySchedule = [
-      { start: "05:00", stop: "07:00", enabled: false },
-      { start: "05:00", stop: "07:00", enabled: true  },
-      { start: "05:00", stop: "07:00", enabled: true  },
-      { start: "05:00", stop: "07:00", enabled: true  },
-      { start: "05:00", stop: "07:00", enabled: true  },
-      { start: "05:00", stop: "07:00", enabled: true  },
-      { start: "05:00", stop: "07:00", enabled: false }
-    ];
-    schedSynced = false;
-    safeSet("vevor_sched_v4", weeklySchedule);
-    safeSet("vevor_sched_synced_v4", false);
+  async function checkHeaterSchedule() {
+    if (!writeChar) {
+      log("Connect to heater first to check schedule.");
+      return;
+    }
+    log("Querying heater ECU timer memory...");
+    rxBuffer = "";
+    awaitingScheduleRead = true;
+    await writeRawHex("baab04ee000000");
+    await sleep(350);
+    if (awaitingScheduleRead) await writeRawHex("baab04ed000000");
+
+    setTimeout(() => {
+      if (awaitingScheduleRead) {
+        awaitingScheduleRead = false;
+        log("Note: This ECU revision uses write-only timer memory (does not echo schedule over BLE). Showing last schedule synced from this app: " + schedMeta.lastSyncStr);
+        renderScheduleRows();
+      }
+    }, 1800);
+  }
+
+  function parseSchedulePacket(hexStr) {
+    let idx = hexStr.indexOf("abba24ed");
+    if (idx === -1) idx = hexStr.indexOf("abba24ee");
+    if (idx === -1 || hexStr.length < idx + 78) return false;
+
+    const body = hexStr.slice(idx + 8, idx + 78);
+    for (let dow = 0; dow < 7; dow++) {
+      const chunk = body.slice(dow * 10, dow * 10 + 10);
+      const sh = parseInt(chunk.slice(0, 2), 16);
+      const sm = parseInt(chunk.slice(2, 4), 16);
+      const eh = parseInt(chunk.slice(4, 6), 16);
+      const em = parseInt(chunk.slice(6, 8), 16);
+      const flag = parseInt(chunk.slice(8, 10), 16);
+      if (sh <= 23 && eh <= 23) {
+        const isEn = (flag & 0x01) === 1;
+        weeklySchedule[dow] = {
+          start: (sh === 0 && sm === 0 && !isEn) ? "05:00" : `${String(sh).padStart(2, "0")}:${String(sm).padStart(2, "0")}`,
+          stop: (eh === 0 && em === 0 && !isEn) ? "07:00" : `${String(eh).padStart(2, "0")}:${String(em).padStart(2, "0")}`,
+          enabled: isEn
+        };
+      }
+    }
+    awaitingScheduleRead = false;
+    schedMeta = { synced: true, lastSyncStr: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}), ecuVerified: true };
+    safeSet("vevor_sched_v5", weeklySchedule);
+    safeSet("vevor_sched_meta_v5", schedMeta);
     renderScheduleRows();
-    log("Reset schedule to Mon–Fri 05:00–07:00. Tap Save to push to heater.");
+    log("✅ Verified live 7-day schedule directly from Heater ECU!");
+    return true;
   }
 
   async function pushCustomSchedule() {
-    safeSet("vevor_sched_v4", weeklySchedule);
+    safeSet("vevor_sched_v5", weeklySchedule);
     if (!writeChar) {
-      schedSynced = false;
-      safeSet("vevor_sched_synced_v4", false);
-      renderScheduleRows();
+      markUnsaved();
       log("Saved locally! Connect to heater to push schedule.");
       return;
     }
-    log("Syncing RTC clock & writing 7-day schedule...");
+    log("Syncing RTC clock & writing 40B chunked schedule...");
     await syncClock();
-    await sleep(400);
+    await sleep(450);
 
     let payload = "baab24ed";
     for (let dow = 0; dow < 7; dow++) {
-      const [sh, sm] = weeklySchedule[dow].start.split(":").map(Number);
-      const [eh, em] = weeklySchedule[dow].stop.split(":").map(Number);
-      const flag = weeklySchedule[dow].enabled ? "11" : "10";
-      payload += sh.toString(16).padStart(2, "0")
-              +  sm.toString(16).padStart(2, "0")
-              +  eh.toString(16).padStart(2, "0")
-              +  em.toString(16).padStart(2, "0")
-              +  flag;
+      if (!weeklySchedule[dow].enabled) {
+        // Send strict 0000000000 when OFF so no ECU revision misinterprets flag 0x10 as active!
+        payload += "0000000000";
+      } else {
+        const [sh, sm] = weeklySchedule[dow].start.split(":").map(Number);
+        const [eh, em] = weeklySchedule[dow].stop.split(":").map(Number);
+        payload += sh.toString(16).padStart(2, "0")
+                +  sm.toString(16).padStart(2, "0")
+                +  eh.toString(16).padStart(2, "0")
+                +  em.toString(16).padStart(2, "0")
+                +  "11"; // 0x11 = Repeat + Enabled
+      }
     }
     await sendCommand(payload);
-    schedSynced = true;
-    safeSet("vevor_sched_synced_v4", true);
+    schedMeta = {
+      synced: true,
+      lastSyncStr: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      ecuVerified: false
+    };
+    safeSet("vevor_sched_meta_v5", schedMeta);
     renderScheduleRows();
-    log("✅ 7-Day Schedule Synced to Heater ECU!");
+    log("✅ Schedule programmed onto Heater ECU!");
+  }
+
+  async function clearAllTimersOnHeater() {
+    for (let d = 0; d < 7; d++) {
+      weeklySchedule[d].enabled = false;
+    }
+    await pushCustomSchedule();
+    log("🚫 All 7 timer slots zeroed & disabled on Heater ECU.");
   }
 
   async function armQuick5AM() {
@@ -1177,8 +1296,8 @@
 
   async function loadWeatherLows() {
     if (window.location.protocol === "content:") {
-      log("Weather blocked by Android 'content://' file preview. Works automatically once hosted on GitHub Pages (https://)!");
-      alert("Android blocks internet weather lookups when opened from 'content://' Downloads preview.\n\nOnce hosted on GitHub Pages (https://), this button loads 7-day overnight lows for your exact GPS location!");
+      log("Open via your https:// GitHub link to load live weather lows!");
+      alert("Android blocks internet requests inside 'content://' local file previews.\n\nOpen your https:// GitHub Pages link to load 7-day overnight lows!");
       return;
     }
     log("Fetching 7-day overnight lows...");
@@ -1208,7 +1327,7 @@
     }
   }
 
-  // ================= POWER, SLIDER & TELEMETRY =================
+  // ================= POWER, CO MONITOR & TELEMETRY =================
   async function togglePower() {
     if (state.runCode === "02") {
       log("Wait for COOLING purge to finish before restarting.");
@@ -1285,6 +1404,48 @@
     }
   }
 
+  function updateCoUI() {
+    const coCard = document.getElementById("coCard");
+    const coText = document.getElementById("valCoText");
+    const coPill = document.getElementById("coPill");
+
+    if (!state.hasTelemetry) {
+      coCard.className = "co-card";
+      coText.innerText = "Connect to verify CO status";
+      coPill.style.display = "none";
+      return;
+    }
+
+    coPill.style.display = "inline-block";
+    const isCoFault = state.isFault && state.faultCode === 11;
+
+    if (isCoFault || (state.coPpm !== null && state.coPpm >= 70)) {
+      coCard.className = "co-card danger";
+      coText.style.color = "#ff8a80";
+      coText.innerText = state.coPpm ? `🚨 DANGER: ${state.coPpm} PPM CO!` : "🚨 E-CO ALARM TRIGGERED!";
+      coPill.className = "pill pill-low";
+      coPill.innerText = "ALARM!";
+    } else if (state.coPpm !== null && state.coPpm >= 35) {
+      coCard.className = "co-card warn";
+      coText.style.color = "var(--amber)";
+      coText.innerText = `⚠️ ELEVATED: ${state.coPpm} PPM (Ventilate)`;
+      coPill.className = "pill pill-warn";
+      coPill.innerText = "ELEVATED";
+    } else if (state.coPpm !== null && state.coPpm > 0) {
+      coCard.className = "co-card";
+      coText.style.color = "var(--text)";
+      coText.innerText = `${state.coPpm} PPM • Auto-Shutoff Active`;
+      coPill.className = "pill pill-ok";
+      coPill.innerText = "SAFE";
+    } else {
+      coCard.className = "co-card";
+      coText.style.color = "var(--text)";
+      coText.innerText = "0 PPM / Armed (E-CO Cutoff Active)";
+      coPill.className = "pill pill-ok";
+      coPill.innerText = "SAFE";
+    }
+  }
+
   function renderTelemetryUI() {
     const slider = document.getElementById("sliderTarget");
     if (state.modeHex === "01") {
@@ -1296,6 +1457,8 @@
       slider.max = 10;
       document.getElementById("lblSliderTitle").innerText = "TARGET PUMP GEAR (1–10)";
     }
+
+    updateCoUI();
 
     if (!state.hasTelemetry) {
       document.getElementById("valAmbient").innerText = `-- ${useImperial ? '°F' : '°C'}`;
@@ -1349,7 +1512,15 @@
     const hexArr = Array.from(u8).map(b => b.toString(16).padStart(2, "0").toLowerCase());
     const fullHex = hexArr.join("");
 
-    if (fullHex.startsWith("abba11cc")) {
+    if (showRawHex) log(`RX: ${fullHex.toUpperCase()}`);
+
+    rxBuffer = (rxBuffer + fullHex).slice(-240);
+    if (rxBuffer.includes("abba24ed") || rxBuffer.includes("abba24ee")) {
+      if (parseSchedulePacket(rxBuffer)) rxBuffer = "";
+    }
+
+    // Match standard (abba11cc) or extended CO-equipped status frames (abba13cc / abba15cc)
+    if (fullHex.startsWith("abba") && hexArr[3] === "cc" && u8.length >= 15) {
       state.hasTelemetry = true;
       const statusMap = { "00": "OFF", "01": "HEATING", "02": "COOLING", "04": "VENTING", "06": "PAUSED" };
       state.runCode = hexArr[4];
@@ -1375,6 +1546,14 @@
 
       state.ambientC = state.ecuIsFahrenheit ? (rawAmb - 32) * 5 / 9 : rawAmb;
       state.caseC = state.ecuIsFahrenheit ? (rawCase - 32) * 5 / 9 : rawCase;
+
+      // Parse CO PPM if extended frame includes 16-bit CO sensor bytes before checksum
+      if (u8.length >= 20) {
+        const candidatePpm = (u8[16] << 8) | u8[17];
+        state.coPpm = (candidatePpm >= 0 && candidatePpm <= 2000) ? candidatePpm : null;
+      } else {
+        state.coPpm = null;
+      }
 
       renderTelemetryUI();
       trackLiveBurnAndSoot();
@@ -1453,7 +1632,6 @@
     }
   });
 
-  // Init UI on load
   refreshAllDisplays();
 </script>
 </body>
