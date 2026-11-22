@@ -4,7 +4,7 @@ A clean, single-file **Web Bluetooth** controller for **VEVOR 8kW (CY5004)** and
 
 Built to replace sideloaded third-party APKs with a fast, transparent, zero-tracking interface that runs directly in your browser—complete with 7-day hardware scheduling, fuel burn forecasting, 7-day overnight weather lows, and carbon de-soot tracking.
 
-### 🚀 **[Launch Live Web Controller](https://andrewmeades.github.io/vevor-heater/)** *(← Update if your repo URL differs)*
+### 🚀 **[Launch Live Web Controller](https://andrewmeades.github.io/vevor-heater-controller/)** *(← Update if your repo URL differs)*
 📺 **[Watch the Full Enclosed Trailer Install & Setup Video on YouTube](https://youtu.be/q9EuvBHhfc4)** *(← Paste your YouTube link here)*
 
 ---
