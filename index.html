@@ -126,7 +126,7 @@
       gap: 8px;
     }
     .btn:active { transform: scale(0.98); }
-    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn:disabled { opacity: 0.45; cursor: not-allowed; }
     .btn-connect { background: var(--blue); border-color: var(--blue); margin-bottom: 12px; }
     .btn-power {
       height: 74px;
@@ -300,10 +300,12 @@
       justify-content: space-between;
       align-items: center;
       margin-bottom: 10px;
+      gap: 6px;
     }
     .step-row { display: flex; align-items: center; gap: 10px; }
     .btn-step { width: 54px; height: 46px; font-size: 1.35rem; flex-shrink: 0; }
     input[type="range"] { flex: 1; accent-color: var(--accent); height: 8px; min-width: 0; }
+    input[type="range"]:disabled { opacity: 0.45; }
 
     .sub-actions {
       display: grid;
@@ -454,7 +456,7 @@
     .guide-card h3 { font-size: 0.9rem; color: var(--amber); margin-bottom: 6px; }
     .guide-card p, .guide-card li { font-size: 0.81rem; color: #c5cdd8; }
     .guide-card ul { padding-left: 18px; margin-top: 4px; }
-    .guide-card li { margin-bottom: 5px; }
+    .guide-card li { margin-bottom: 6px; }
 
     .log-header {
       display: flex;
@@ -519,7 +521,7 @@
       <div class="card">
         <div class="card-top">
           <span class="card-label">Supply Voltage</span>
-          <span id="battPill" class="pill pill-ok" style="display:none">OK</span>
+          <span id="battPill" class="pill pill-ok" style="display:none">BATT OK</span>
         </div>
         <div id="valVoltage" class="card-val">-- V</div>
       </div>
@@ -537,7 +539,7 @@
     <div id="coCard" class="co-card">
       <div>
         <div class="card-label">🛡️ CARBON MONOXIDE (CO) MONITOR</div>
-        <div id="valCoText" style="font-size:0.86rem;font-weight:800;margin-top:3px;color:var(--text);">Connect to verify CO status</div>
+        <div id="valCoText" style="font-size:0.82rem;font-weight:800;margin-top:3px;color:var(--text);">Connect to verify CO status</div>
       </div>
       <span id="coPill" class="pill pill-ok" style="display:none;">SAFE</span>
     </div>
@@ -560,14 +562,14 @@
     <div class="control-box">
       <div class="control-header">
         <span id="lblSliderTitle" class="card-label">TARGET PUMP GEAR (1–10)</span>
-        <span id="valTarget" style="font-size:1.22rem;font-weight:800;color:var(--accent)">--</span>
+        <span id="valTarget" style="font-size:1.15rem;font-weight:800;color:var(--accent)">--</span>
       </div>
       <div class="step-row">
-        <button class="btn btn-step" onclick="adjustLevel(-1)">−</button>
+        <button id="btnMinus" class="btn btn-step" onclick="adjustLevel(-1)">−</button>
         <input id="sliderTarget" type="range" min="1" max="10" value="4"
           onchange="onSliderCommit(this.value)"
           oninput="onSliderPreview(this.value)" />
-        <button class="btn btn-step" onclick="adjustLevel(1)">+</button>
+        <button id="btnPlus" class="btn btn-step" onclick="adjustLevel(1)">+</button>
       </div>
     </div>
 
@@ -634,36 +636,39 @@
   <!-- ================= TAB 3: QUICK USER GUIDE ================= -->
   <div id="view-guide" class="view">
     <div class="guide-card">
-      <h3>📲 Always Open From One Link (GitHub App)</h3>
+      <h3>📲 Getting Started & °C / °F Toggle</h3>
       <ul>
-        <li>Use your <b>https:// GitHub Pages link</b> (rather than switching back and forth to a local phone file) so your browser keeps a single unified memory of your schedule and fuel tank!</li>
-        <li>Tap <b>°C / °F</b> in the top bar to switch between Celsius/Liters and Fahrenheit/Gallons.</li>
+        <li>Open this page in <b>Google Chrome</b> (Android or Desktop) via its <b>https://</b> link so your saved schedule and fuel tank stay synced in one place.</li>
+        <li>Tap <b>📲 APP</b> at the top right (or Chrome's <b>⋮ → Add to Home screen</b>) to install it as a full-screen app icon.</li>
+        <li>Tap <b>°C / °F</b> in the top bar to switch temperatures and fuel volume (<b>Liters ↔ US Gallons</b>) across the entire app.</li>
       </ul>
     </div>
 
     <div class="guide-card">
-      <h3>⏰ Reliable Hardware Scheduling & Clearing</h3>
+      <h3>⏰ Weekly Schedule & Reading the LCD Clock Icons</h3>
       <ul>
-        <li>Long schedule packets (40 bytes) are automatically split into 20-byte Bluetooth Low Energy chunks so your heater never misses an update.</li>
-        <li>Want to be 100% sure the heater won't wake up tomorrow? Tap <b>🚫 CLEAR & DISABLE ALL TIMERS ON HEATER</b> on the Schedule tab—it zeroes out every timer byte on the ECU.</li>
-        <li>Tap <b>🔍 CHECK SCHEDULE</b> while connected to query the ECU's active timer table (or verify the last synced timestamp if your board revision uses write-only timer memory).</li>
+        <li><b>Standalone Hardware Timer:</b> Saving a schedule syncs the current time and programs the heater's onboard chip—<b>your phone does NOT need to be near the trailer at 5:00 AM</b>.</li>
+        <li><b>Startup Output Level:</b> Scheduled starts automatically fire up at your <b>last active Mode & Level</b> (shown as <code>Saved: Lvl X</code> when the heater is OFF).</li>
+        <li><b>Alarm Bell (⏰) vs. Clock (🕒) on Heater LCD:</b> On the physical LCD faceplate, the icon with <b>two bell ears on top (⏰)</b> lights up whenever <i>any</i> scheduled timer day is armed. When you tap <b>🚫 CLEAR & DISABLE ALL TIMERS</b>, the bell ears turn OFF! (A plain circle clock <b>🕒</b> without bell ears simply means the red digits are displaying the time of day—press <b>OK</b> on the faceplate to cycle to Temp/Volts/CO).</li>
+        <li><b>Why Can't I Scroll Mon–Sun on the LCD?</b> The physical 4-digit LCD menu only shows basic single-timer settings; the 7-day calendar lives in Bluetooth memory and is tracked right here in the app.</li>
       </ul>
     </div>
 
     <div class="guide-card">
-      <h3>🛡️ Carbon Monoxide (CO) & Safety Cutoffs</h3>
+      <h3>🔋 Supply Voltage & Smart Chargers (NOCO Float)</h3>
       <ul>
-        <li><b>CO Monitor:</b> Displays live CO PPM if broadcast by your heater's BLE sensor, or monitors for hardware CO cutoff (<code>Fault E-CO</code>), which automatically kills fuel and purges the chamber. Always keep a standalone battery CO detector in enclosed sleeping spaces as a secondary backup.</li>
-        <li><b>Cooldown Lockout (3–5 mins):</b> After tapping STOP, the fan stays on until the Heat Exchanger drops below <b>~55°C (131°F)</b>. Never cut 12V battery power while hot (<b>190°C+ / 375°F+</b>)!</li>
+        <li>Most Vevor Bluetooth boards (including the CY5004) report <b>whole integer volts</b> over Bluetooth—meaning a fully charged <b>12.8V</b> battery resting on a NOCO maintainer float will read <b>12 V (BATT OK)</b>, while active bulk/absorption charging reads <b>13 V–14 V (CHARGING)</b>.</li>
+        <li>Glow-plug ignition pulls <b>10A–12A</b> for ~2–3 minutes. If resting voltage drops to <b>≤11 V (LOW BATT!)</b>, charge your battery bank so startup load doesn't dip below ~10.5V and trigger an <code>E-02</code> fault.</li>
       </ul>
     </div>
 
     <div class="guide-card">
-      <h3>🎛️ GEAR vs. THERMO vs. FAN / VENT</h3>
+      <h3>🛡️ CO Monitor, Fuel Tank & Cooldown Safety</h3>
       <ul>
-        <li><b>GEAR Mode:</b> Fixed fuel pump speed (<code>Lvl 1</code> = 0.16 L/h / 0.04 gal/h up to <code>Lvl 10</code> = 0.52 L/h / 0.14 gal/h).</li>
-        <li><b>THERMO Mode:</b> Targets <b>8°C–36°C (46°F–97°F)</b> and throttles down to Lvl 1 idle once reached.</li>
-        <li><b>FAN / VENT:</b> Runs <b>only the blower fan</b> with zero fuel and zero heat.</li>
+        <li><b>Carbon Monoxide (CO):</b> Heaters with a faceplate CO sensor display live <code>CO xx</code> PPM directly on the unit's red LED screen, while Bluetooth monitors the <b>E-CO auto-shutoff alarm</b> (which cuts fuel immediately if CO spikes). Always keep an independent battery CO alarm in enclosed spaces.</li>
+        <li><b>Fuel Tank Estimator:</b> Tap the Diesel Tank card to set your tank size (CY5004 is <b>5.0 L / 1.32 gal</b>) and match your sight glass %. Burn rate scales from <b>0.16 L/h (0.04 gal/h)</b> at Lvl 1 to <b>0.52 L/h (0.14 gal/h)</b> at Lvl 10, and forecasts refill days on the Schedule tab.</li>
+        <li><b>GEAR vs. THERMO vs. FAN/VENT:</b> <b>GEAR</b> locks a fixed pump speed (Lvl 1–10). <b>THERMO</b> targets <b>8°C–36°C (46°F–97°F)</b> and idles down to Lvl 1 when reached. <b>FAN/VENT</b> runs only the blower fan with zero fuel/heat.</li>
+        <li><b>❄️ Cooldown Lockout (3–5 mins):</b> After tapping STOP, the fan purges heat until the Heat Exchanger drops below <b>~55°C (131°F)</b>; restart commands are ignored until complete. <b>NEVER cut 12V battery power while hot (190°C+ / 375°F+)!</b></li>
       </ul>
     </div>
   </div>
@@ -698,7 +703,7 @@
     <div class="modal">
       <h3>📲 Add Controller to Home Screen</h3>
       <p style="font-size:0.84rem;color:#c5cdd8;line-height:1.5;margin-bottom:14px;">
-        1. Open this controller from your <b>https:// GitHub link</b> in Chrome.<br>
+        1. Open this controller from your <b>https://</b> web link in Chrome.<br>
         2. Tap Chrome's <b>⋮</b> menu in the top-right corner.<br>
         3. Tap <b>Add to Home screen</b> (or <b>Install app</b>).
       </p>
@@ -820,6 +825,9 @@
   let desootSecLeft = 0;
   let prevGearBeforeDesoot = 4;
 
+  // Remembered last active output settings so OFF state doesn't drop to Lvl 0
+  let savedTargets = safeGet("vevor_saved_targets_v5", { gear: 5, thermoC: 20 });
+
   let state = {
     hasTelemetry: false,
     runCode: "00",
@@ -829,10 +837,11 @@
     faultCode: 0,
     modeHex: "00",
     ecuIsFahrenheit: false,
-    rawTarget: 4,
+    rawTarget: savedTargets.gear,
     ambientC: null,
     caseC: null,
     volts: null,
+    voltsIsInt: true,
     coPpm: null
   };
 
@@ -867,7 +876,7 @@
     el.innerHTML = `[${ts}] ${msg}<br>` + el.innerHTML;
   }
 
-  // ================= BLE CHUNKED WRITER (Fixes 40-Byte Schedule Drop!) =================
+  // ================= BLE CHUNKED WRITER (20B MTU Safe) =================
   const sleep = ms => new Promise(r => setTimeout(r, ms));
 
   function appendChecksum(hexStr) {
@@ -879,7 +888,6 @@
   async function writeRawHex(hexWithoutChecksum) {
     if (!writeChar) return;
     const packet = appendChecksum(hexWithoutChecksum);
-    // Split packets > 20 bytes into 20-byte BLE MTU chunks so schedule writes never truncate!
     const MTU = 20;
     for (let offset = 0; offset < packet.length; offset += MTU) {
       const chunk = packet.slice(offset, offset + MTU);
@@ -918,7 +926,10 @@
 
   // ================= FUEL TANK UI & MODAL =================
   function getAssumedGear() {
-    return (state.modeHex === "00" && state.rawTarget >= 1 && state.rawTarget <= 10) ? state.rawTarget : 4;
+    if (state.modeHex === "00" && state.rawTarget >= 1 && state.rawTarget <= 10) {
+      return state.rawTarget;
+    }
+    return savedTargets.gear || 4;
   }
 
   function renderFuelUI() {
@@ -1025,11 +1036,11 @@
       log("De-soot timer stopped.");
       return;
     }
-    prevGearBeforeDesoot = state.rawTarget || 4;
+    prevGearBeforeDesoot = getAssumedGear();
     log("Starting 15-Min Carbon De-Soot Burn (Lvl 10)...");
     if (!state.isHeating && state.runCode === "00") {
       await sendCommand("baab04bba10000");
-      await sleep(800);
+      await sleep(1200);
     }
     if (state.modeHex === "01") {
       await sendCommand("baab04bbac0000");
@@ -1061,7 +1072,7 @@
     lastTickMs = now;
     if (!state.isHeating || dtHours <= 0) return;
 
-    const effGear = state.modeHex === "01" ? 3 : (state.rawTarget || 4);
+    const effGear = state.modeHex === "01" ? 3 : getAssumedGear();
     const burnedL = burnRateLitersPerHr(effGear) * dtHours;
     fuelData.remainingL = Math.max(0, +(fuelData.remainingL - burnedL).toFixed(4));
     safeSet("vevor_fuel_v5", fuelData);
@@ -1099,7 +1110,7 @@
     let statusHtml = "";
     if (schedMeta.synced) {
       const badgeTxt = schedMeta.ecuVerified ? "✅ VERIFIED FROM ECU" : `✅ SYNCED (${schedMeta.lastSyncStr})`;
-      statusHtml = `<span style="color:var(--green);font-weight:700;">${badgeTxt}</span> • ${activeCount === 0 ? 'All Timers OFF' : activeCount + ' day(s) armed'}`;
+      statusHtml = `<span style="color:var(--green);font-weight:700;">${badgeTxt}</span> • ${activeCount === 0 ? 'All Timers OFF (⏰ Off)' : activeCount + ' day(s) @ Lvl ' + gear}`;
     } else {
       statusHtml = `<span style="color:var(--amber);font-weight:700;">● UNSAVED EDITS</span> — Tap Save below to program heater`;
     }
@@ -1166,7 +1177,7 @@
     const alertBox = document.getElementById("refillAlert");
     if (firstRefillDay) {
       alertBox.style.display = "block";
-      alertBox.innerText = `⚠️ Tank drops ≤ 20% by ${firstRefillDay} — refill before then!`;
+      alertBox.innerText = `⚠️ Tank drops ≤ 20% by ${firstRefillDay} (@ Lvl ${gear}) — refill before then!`;
     } else {
       alertBox.style.display = "none";
     }
@@ -1205,7 +1216,7 @@
     setTimeout(() => {
       if (awaitingScheduleRead) {
         awaitingScheduleRead = false;
-        log("Note: This ECU revision uses write-only timer memory (does not echo schedule over BLE). Showing last schedule synced from this app: " + schedMeta.lastSyncStr);
+        log("Write-only ECU timer: check LCD for ⏰ bell icon (bell ON = armed, bell OFF = cleared). Last app sync: " + schedMeta.lastSyncStr);
         renderScheduleRows();
       }
     }, 1800);
@@ -1256,7 +1267,6 @@
     let payload = "baab24ed";
     for (let dow = 0; dow < 7; dow++) {
       if (!weeklySchedule[dow].enabled) {
-        // Send strict 0000000000 when OFF so no ECU revision misinterprets flag 0x10 as active!
         payload += "0000000000";
       } else {
         const [sh, sm] = weeklySchedule[dow].start.split(":").map(Number);
@@ -1265,7 +1275,7 @@
                 +  sm.toString(16).padStart(2, "0")
                 +  eh.toString(16).padStart(2, "0")
                 +  em.toString(16).padStart(2, "0")
-                +  "11"; // 0x11 = Repeat + Enabled
+                +  "11";
       }
     }
     await sendCommand(payload);
@@ -1284,7 +1294,7 @@
       weeklySchedule[d].enabled = false;
     }
     await pushCustomSchedule();
-    log("🚫 All 7 timer slots zeroed & disabled on Heater ECU.");
+    log("🚫 All 7 timer slots cleared (⏰ alarm-bell icon on LCD turns off).");
   }
 
   async function armQuick5AM() {
@@ -1361,6 +1371,10 @@
 
   async function adjustLevel(delta) {
     if (!writeChar) return;
+    if (state.runCode === "00") {
+      log("Start heater first to adjust output level.");
+      return;
+    }
     const cmd = delta > 0 ? "baab04bba20000" : "baab04bba30000";
     await sendCommand(cmd);
   }
@@ -1379,28 +1393,40 @@
   }
 
   async function onSliderCommit(dispVal) {
+    if (state.runCode === "00") {
+      log("Start heater first to adjust output level.");
+      renderTelemetryUI();
+      return;
+    }
     const rawTarget = displayUnitsToRawTarget(parseInt(dispVal, 10));
     await stepToRawTarget(rawTarget);
   }
 
-  function updateBatteryUI(volts) {
+  function updateBatteryUI(volts, isInt) {
     if (volts === null) return;
-    document.getElementById("valVoltage").innerText = `${volts.toFixed(1)} V`;
+    document.getElementById("valVoltage").innerText = isInt ? `${Math.round(volts)} V` : `${volts.toFixed(1)} V`;
     const pill = document.getElementById("battPill");
     pill.style.display = "inline-block";
 
-    if (volts >= 13.2) {
-      pill.className = "pill pill-ok";
-      pill.innerText = "CHARGING";
-    } else if (volts >= 12.1) {
-      pill.className = "pill pill-ok";
-      pill.innerText = "BATT OK";
-    } else if (volts >= 11.6) {
-      pill.className = "pill pill-warn";
-      pill.innerText = "CHARGE SOON";
+    // Support both 12V and 24V trailer/vehicle setups + whole-integer BLE reporting (12V = BATT OK on float!)
+    if (volts >= 20) {
+      if (volts >= 26.0) { pill.className = "pill pill-ok"; pill.innerText = "CHARGING"; }
+      else if (volts >= 24.0) { pill.className = "pill pill-ok"; pill.innerText = "BATT OK"; }
+      else { pill.className = "pill pill-low"; pill.innerText = "LOW BATT!"; }
     } else {
-      pill.className = "pill pill-low";
-      pill.innerText = "LOW BATT!";
+      if (volts >= 13.0) {
+        pill.className = "pill pill-ok";
+        pill.innerText = "CHARGING";
+      } else if (volts >= 12.0) {
+        pill.className = "pill pill-ok";
+        pill.innerText = "BATT OK";
+      } else if (!isInt && volts >= 11.6) {
+        pill.className = "pill pill-warn";
+        pill.innerText = "CHARGE SOON";
+      } else {
+        pill.className = "pill pill-low";
+        pill.innerText = "LOW BATT!";
+      }
     }
   }
 
@@ -1434,13 +1460,13 @@
     } else if (state.coPpm !== null && state.coPpm > 0) {
       coCard.className = "co-card";
       coText.style.color = "var(--text)";
-      coText.innerText = `${state.coPpm} PPM • Auto-Shutoff Active`;
+      coText.innerText = `${state.coPpm} PPM • E-CO Auto-Shutoff Active`;
       coPill.className = "pill pill-ok";
       coPill.innerText = "SAFE";
     } else {
       coCard.className = "co-card";
       coText.style.color = "var(--text)";
-      coText.innerText = "0 PPM / Armed (E-CO Cutoff Active)";
+      coText.innerText = "Armed • E-CO Auto-Shutoff (Live PPM on LCD)";
       coPill.className = "pill pill-ok";
       coPill.innerText = "SAFE";
     }
@@ -1448,6 +1474,11 @@
 
   function renderTelemetryUI() {
     const slider = document.getElementById("sliderTarget");
+    const isOff = state.hasTelemetry && state.runCode === "00";
+    slider.disabled = isOff;
+    document.getElementById("btnMinus").disabled = isOff;
+    document.getElementById("btnPlus").disabled = isOff;
+
     if (state.modeHex === "01") {
       slider.min = useImperial ? 46 : 8;
       slider.max = useImperial ? 97 : 36;
@@ -1455,7 +1486,7 @@
     } else {
       slider.min = 1;
       slider.max = 10;
-      document.getElementById("lblSliderTitle").innerText = "TARGET PUMP GEAR (1–10)";
+      document.getElementById("lblSliderTitle").innerText = isOff ? "NEXT STARTUP GEAR (1–10)" : "TARGET PUMP GEAR (1–10)";
     }
 
     updateCoUI();
@@ -1463,6 +1494,9 @@
     if (!state.hasTelemetry) {
       document.getElementById("valAmbient").innerText = `-- ${useImperial ? '°F' : '°C'}`;
       document.getElementById("valCase").innerText = `-- ${useImperial ? '°F' : '°C'}`;
+      const savedG = savedTargets.gear || 4;
+      slider.value = savedG;
+      document.getElementById("valTarget").innerText = `Saved: Lvl ${savedG}`;
       return;
     }
 
@@ -1471,7 +1505,7 @@
     document.getElementById("lblMode").innerText = modeStr;
     document.getElementById("valAmbient").innerText = fmtTempFromC(state.ambientC);
     document.getElementById("valCase").innerText = fmtTempFromC(state.caseC);
-    updateBatteryUI(state.volts);
+    updateBatteryUI(state.volts, state.voltsIsInt);
 
     document.getElementById("btnVent").className = state.runCode === "04" ? "btn btn-vent active" : "btn btn-vent";
 
@@ -1494,8 +1528,9 @@
       faultBanner.style.display = "none";
       const dispTarget = getTargetInDisplayUnits(state.rawTarget);
       slider.value = dispTarget;
+      const prefix = isOff ? "Saved: " : "";
       document.getElementById("valTarget").innerText =
-        state.modeHex === "01" ? `${dispTarget} ${useImperial ? '°F' : '°C'}` : `Lvl ${dispTarget}`;
+        state.modeHex === "01" ? `${prefix}${dispTarget} ${useImperial ? '°F' : '°C'}` : `${prefix}Lvl ${dispTarget}`;
     }
   }
 
@@ -1519,7 +1554,6 @@
       if (parseSchedulePacket(rxBuffer)) rxBuffer = "";
     }
 
-    // Match standard (abba11cc) or extended CO-equipped status frames (abba13cc / abba15cc)
     if (fullHex.startsWith("abba") && hexArr[3] === "cc" && u8.length >= 15) {
       state.hasTelemetry = true;
       const statusMap = { "00": "OFF", "01": "HEATING", "02": "COOLING", "04": "VENTING", "06": "PAUSED" };
@@ -1530,15 +1564,38 @@
       state.isFault = hexArr[5] === "ff";
       state.modeHex = hexArr[5];
       const rawVal6 = parseInt(hexArr[6], 16);
-      if (state.isFault) state.faultCode = rawVal6;
-      else state.rawTarget = rawVal6;
+
+      if (state.isFault) {
+        state.faultCode = rawVal6;
+      } else if (rawVal6 > 0) {
+        // Active running target — update state and persist for OFF memory!
+        state.rawTarget = rawVal6;
+        if (state.modeHex === "00" && rawVal6 >= 1 && rawVal6 <= 10) {
+          savedTargets.gear = rawVal6;
+        } else if (state.modeHex === "01") {
+          savedTargets.thermoC = state.ecuIsFahrenheit ? fToC(rawVal6) : rawVal6;
+        }
+        safeSet("vevor_saved_targets_v5", savedTargets);
+      } else {
+        // Heater is OFF and sending 0x00 in Byte 6 — recall last saved Gear/Temp!
+        state.rawTarget = state.modeHex === "01"
+          ? (state.ecuIsFahrenheit ? cToF(savedTargets.thermoC) : savedTargets.thermoC)
+          : (savedTargets.gear || 4);
+      }
 
       const b8 = parseInt(hexArr[8], 16);
       const b9 = parseInt(hexArr[9], 16);
       const combined16 = (b8 << 8) | b9;
-      if (combined16 >= 90 && combined16 <= 320) state.volts = combined16 / 10.0;
-      else if (b9 >= 8 && b9 <= 32 && b8 <= 9) state.volts = b9 + (b8 / 10.0);
-      else state.volts = b9;
+      if (combined16 >= 90 && combined16 <= 320) {
+        state.volts = combined16 / 10.0;
+        state.voltsIsInt = false;
+      } else if (b9 >= 8 && b9 <= 32 && b8 > 0 && b8 <= 9) {
+        state.volts = b9 + (b8 / 10.0);
+        state.voltsIsInt = false;
+      } else {
+        state.volts = b9;
+        state.voltsIsInt = true;
+      }
 
       state.ecuIsFahrenheit = hexArr[10] !== "00";
       const rawAmb = parseInt(hexArr[11], 16) - (state.ecuIsFahrenheit ? 22 : 30);
@@ -1547,7 +1604,6 @@
       state.ambientC = state.ecuIsFahrenheit ? (rawAmb - 32) * 5 / 9 : rawAmb;
       state.caseC = state.ecuIsFahrenheit ? (rawCase - 32) * 5 / 9 : rawCase;
 
-      // Parse CO PPM if extended frame includes 16-bit CO sensor bytes before checksum
       if (u8.length >= 20) {
         const candidatePpm = (u8[16] << 8) | u8[17];
         state.coPpm = (candidatePpm >= 0 && candidatePpm <= 2000) ? candidatePpm : null;
@@ -1556,6 +1612,7 @@
       }
 
       renderTelemetryUI();
+      renderFuelUI();
       trackLiveBurnAndSoot();
     }
   }
