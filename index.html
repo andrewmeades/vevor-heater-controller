@@ -241,6 +241,13 @@
       background: var(--green);
       transition: width 0.3s;
     }
+    .fuel-subnote {
+      font-size: 0.68rem;
+      color: var(--ice);
+      margin-top: 6px;
+      font-weight: 600;
+      display: none;
+    }
 
     /* Modals */
     .modal-backdrop {
@@ -557,16 +564,17 @@
       <div class="fuel-bar-bg">
         <div id="fuelBarFill" class="fuel-bar-fill" style="width:89%"></div>
       </div>
+      <div id="fuelOfflineNote" class="fuel-subnote"></div>
     </div>
 
     <div class="control-box">
       <div class="control-header">
-        <span id="lblSliderTitle" class="card-label">TARGET PUMP GEAR (1–10)</span>
+        <span id="lblSliderTitle" class="card-label">TARGET PUMP GEAR (H-1 – H-6)</span>
         <span id="valTarget" style="font-size:1.15rem;font-weight:800;color:var(--accent)">--</span>
       </div>
       <div class="step-row">
         <button id="btnMinus" class="btn btn-step" onclick="adjustLevel(-1)">−</button>
-        <input id="sliderTarget" type="range" min="1" max="10" value="4"
+        <input id="sliderTarget" type="range" min="1" max="6" value="4"
           onchange="onSliderCommit(this.value)"
           oninput="onSliderPreview(this.value)" />
         <button id="btnPlus" class="btn btn-step" onclick="adjustLevel(1)">+</button>
@@ -620,7 +628,7 @@
         <span style="font-size:0.74rem;color:var(--blue);cursor:pointer;font-weight:700;" onclick="document.getElementById('desootWhy').classList.toggle('open')">Why de-soot? ▾</span>
       </div>
       <div id="desootWhy" class="desoot-why">
-        Running on low gears (Lvl 1–3) or Thermostat idle leaves unburnt carbon soot on the glow-plug screen, which can cause white smoke or <code>E-08 / E-10</code> startup failures. Running at <b>Max (Lvl 10) for 15 minutes</b> every ~20 low-idle hours bakes the chamber clean!
+        Running on low gears (H-1 / H-2) or Thermostat idle leaves unburnt carbon soot on the glow-plug screen, which can cause white smoke or <code>E-08 / E-10</code> startup failures. Running at <b>Max Output for 15 minutes</b> every ~20 low-idle hours bakes the chamber clean!
       </div>
       <div style="display:flex;gap:8px;margin-top:10px;">
         <button id="btnDesoot" class="btn btn-sm" style="border-color:var(--accent);color:#ff8a65;" onclick="startDesootBurn()">
@@ -636,39 +644,40 @@
   <!-- ================= TAB 3: QUICK USER GUIDE ================= -->
   <div id="view-guide" class="view">
     <div class="guide-card">
-      <h3>📲 Getting Started & °C / °F Toggle</h3>
+      <h3>📲 Getting Started & Hardware Scale</h3>
       <ul>
-        <li>Open this page in <b>Google Chrome</b> (Android or Desktop) via its <b>https://</b> link so your saved schedule and fuel tank stay synced in one place.</li>
-        <li>Tap <b>📲 APP</b> at the top right (or Chrome's <b>⋮ → Add to Home screen</b>) to install it as a full-screen app icon.</li>
-        <li>Tap <b>°C / °F</b> in the top bar to switch temperatures and fuel volume (<b>Liters ↔ US Gallons</b>) across the entire app.</li>
+        <li>Open this page in <b>Google Chrome</b> (Android/Desktop) or <b>Bluefy</b> (iOS) via its <b>https://</b> link so your saved schedule and fuel tank stay synced in one place.</li>
+        <li>Tap <b>°C / °F</b> in the top bar to switch temperatures and fuel volume (<b>Liters ↔ US Gallons</b>) across the app.</li>
+        <li><b>Gear Scale (H-1–H-6 vs. 1–10):</b> VEVOR CY5004 heaters use <b>6 power levels (H-1 to H-6)</b>. If your heater uses an older 10-level controller, toggle here:
+          <button id="btnGearScale" class="btn-mini" style="margin-top:6px;padding:6px 10px;border-color:var(--amber);color:var(--amber);" onclick="toggleMaxGear()">Current Scale: 6 Levels (H-1 – H-6)</button>
+        </li>
       </ul>
     </div>
 
     <div class="guide-card">
       <h3>⏰ Weekly Schedule & Reading the LCD Clock Icons</h3>
       <ul>
-        <li><b>Standalone Hardware Timer:</b> Saving a schedule syncs the current time and programs the heater's onboard chip—<b>your phone does NOT need to be near the trailer at 5:00 AM</b>.</li>
-        <li><b>Startup Output Level:</b> Scheduled starts automatically fire up at your <b>last active Mode & Level</b> (shown as <code>Saved: Lvl X</code> when the heater is OFF).</li>
-        <li><b>Alarm Bell (⏰) vs. Clock (🕒) on Heater LCD:</b> On the physical LCD faceplate, the icon with <b>two bell ears on top (⏰)</b> lights up whenever <i>any</i> scheduled timer day is armed. When you tap <b>🚫 CLEAR & DISABLE ALL TIMERS</b>, the bell ears turn OFF! (A plain circle clock <b>🕒</b> without bell ears simply means the red digits are displaying the time of day—press <b>OK</b> on the faceplate to cycle to Temp/Volts/CO).</li>
-        <li><b>Why Can't I Scroll Mon–Sun on the LCD?</b> The physical 4-digit LCD menu only shows basic single-timer settings; the 7-day calendar lives in Bluetooth memory and is tracked right here in the app.</li>
+        <li><b>Collision-Proof Sync:</b> Tapping <b>Save Schedule</b> pauses background polling, syncs the real-time clock, and double-writes the 40-byte timer table in 20-byte BLE chunks so updates never drop.</li>
+        <li><b>Startup Output Level:</b> Scheduled starts fire up at your <b>last active Mode & Gear</b> (shown as <code>Saved: H-X</code> when OFF).</li>
+        <li><b>Alarm Bell (⏰) vs. Clock (🕒) on LCD:</b> The icon with <b>two bell ears on top (⏰)</b> lights up whenever <i>any</i> timer day is armed, and turns OFF when you tap <b>🚫 CLEAR & DISABLE ALL TIMERS</b>. A plain circle clock (<b>🕒</b>) just means the red digits are displaying the time of day.</li>
       </ul>
     </div>
 
     <div class="guide-card">
-      <h3>🔋 Supply Voltage & Smart Chargers (NOCO Float)</h3>
+      <h3>⛽ Live + Offline Fuel Tank Tracking (CY5004)</h3>
       <ul>
-        <li>Most Vevor Bluetooth boards (including the CY5004) report <b>whole integer volts</b> over Bluetooth—meaning a fully charged <b>12.8V</b> battery resting on a NOCO maintainer float will read <b>12 V (BATT OK)</b>, while active bulk/absorption charging reads <b>13 V–14 V (CHARGING)</b>.</li>
-        <li>Glow-plug ignition pulls <b>10A–12A</b> for ~2–3 minutes. If resting voltage drops to <b>≤11 V (LOW BATT!)</b>, charge your battery bank so startup load doesn't dip below ~10.5V and trigger an <code>E-02</code> fault.</li>
+        <li>Tap the <b>Diesel Tank card</b> whenever you top up or glance at the sight glass (CY5004 is <b>5.0 L / 1.32 gal</b> with marks at 100%, 70%, 50%, 20%).</li>
+        <li><b>Automatic Offline Timer Deduction:</b> Even if your phone is off or inside the house during a 5:00 AM hardware-timer run, the app automatically deducts elapsed scheduled burn the next time you open it—without double-counting live Bluetooth sessions!</li>
+        <li><b>6-Level Dosing Curve:</b> <b>H-1</b> = 0.16 L/h (0.04 gal/h), <b>H-2</b> = 0.23 L/h, <b>H-3</b> = 0.30 L/h, <b>H-4</b> = 0.38 L/h, <b>H-5</b> = 0.45 L/h, up to <b>H-6 (Max)</b> = 0.52 L/h (0.14 gal/h).</li>
       </ul>
     </div>
 
     <div class="guide-card">
-      <h3>🛡️ CO Monitor, Fuel Tank & Cooldown Safety</h3>
+      <h3>🔋 Voltage, CO Monitor & Cooldown Lockout</h3>
       <ul>
-        <li><b>Carbon Monoxide (CO):</b> Heaters with a faceplate CO sensor display live <code>CO xx</code> PPM directly on the unit's red LED screen, while Bluetooth monitors the <b>E-CO auto-shutoff alarm</b> (which cuts fuel immediately if CO spikes). Always keep an independent battery CO alarm in enclosed spaces.</li>
-        <li><b>Fuel Tank Estimator:</b> Tap the Diesel Tank card to set your tank size (CY5004 is <b>5.0 L / 1.32 gal</b>) and match your sight glass %. Burn rate scales from <b>0.16 L/h (0.04 gal/h)</b> at Lvl 1 to <b>0.52 L/h (0.14 gal/h)</b> at Lvl 10, and forecasts refill days on the Schedule tab.</li>
-        <li><b>GEAR vs. THERMO vs. FAN/VENT:</b> <b>GEAR</b> locks a fixed pump speed (Lvl 1–10). <b>THERMO</b> targets <b>8°C–36°C (46°F–97°F)</b> and idles down to Lvl 1 when reached. <b>FAN/VENT</b> runs only the blower fan with zero fuel/heat.</li>
-        <li><b>❄️ Cooldown Lockout (3–5 mins):</b> After tapping STOP, the fan purges heat until the Heat Exchanger drops below <b>~55°C (131°F)</b>; restart commands are ignored until complete. <b>NEVER cut 12V battery power while hot (190°C+ / 375°F+)!</b></li>
+        <li><b>Supply Voltage:</b> CY5004 boards report whole integer volts over BLE—a full 12.8V battery on a NOCO float maintainer reads <b>12 V (BATT OK)</b>, active bulk charging reads <b>13 V–14 V (CHARGING)</b>, and <b>≤11 V (LOW BATT!)</b> means charge soon before 11A glow-plug startup trips <code>E-02</code>.</li>
+        <li><b>Carbon Monoxide (CO):</b> Live <code>CO xx</code> PPM shows on the unit's physical LED screen while BLE monitors the <b>E-CO auto-shutoff alarm</b>. Always keep a standalone battery CO detector in enclosed spaces.</li>
+        <li><b>❄️ Cooldown Lockout (3–5 mins):</b> After STOP, the fan purges heat until the Heat Exchanger drops below <b>~55°C (131°F)</b>. <b>NEVER cut 12V battery power while hot (190°C+ / 375°F+)!</b></li>
       </ul>
     </div>
   </div>
@@ -775,10 +784,28 @@
     }
   }
 
-  // ================= UNIT CONVERSION (°C/L <-> °F/gal) =================
+  // ================= UNITS & HARDWARE GEAR SCALE (H-1..H-6 DEFAULT) =================
   const L_PER_GAL = 3.78541;
   let useImperial = safeGet("vevor_imperial_v5", false);
+  let maxGear = safeGet("vevor_max_gear_v52", 6); // CY5004 uses 6 gears (H-1 to H-6)
   let showRawHex = false;
+
+  function fmtGear(g) {
+    return maxGear === 6 ? `H-${g}` : `Lvl ${g}`;
+  }
+  function toggleMaxGear() {
+    maxGear = maxGear === 6 ? 10 : 6;
+    safeSet("vevor_max_gear_v52", maxGear);
+    if (savedTargets.gear > maxGear) {
+      savedTargets.gear = maxGear;
+      safeSet("vevor_saved_targets_v5", savedTargets);
+    }
+    if (state.modeHex === "00" && state.rawTarget > maxGear) {
+      state.rawTarget = maxGear;
+    }
+    refreshAllDisplays();
+    log(`Hardware gear scale set to 1–${maxGear}.`);
+  }
 
   function cToF(c) { return Math.round(c * 9 / 5 + 32); }
   function fToC(f) { return Math.round((f - 32) * 5 / 9); }
@@ -810,14 +837,17 @@
   };
   const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
+  // Calibrated dosing curve: 0.16 L/h at min gear (H-1) -> 0.52 L/h at maxGear (H-6 or Lvl 10)
   function burnRateLitersPerHr(gear) {
-    const g = Math.max(1, Math.min(10, gear || 4));
-    return +(0.16 + ((g - 1) / 9) * 0.36).toFixed(3);
+    const span = Math.max(1, maxGear - 1);
+    const g = Math.max(1, Math.min(maxGear, gear || Math.ceil(maxGear * 0.65)));
+    return +(0.16 + ((g - 1) / span) * 0.36).toFixed(3);
   }
 
   let bleDevice = null;
   let writeChar = null;
   let pollInterval = null;
+  let bleBusy = false; // Strict mutex so status polls NEVER collide with 40B schedule chunks
   let rxBuffer = "";
   let awaitingScheduleRead = false;
   let lastTickMs = Date.now();
@@ -825,8 +855,9 @@
   let desootSecLeft = 0;
   let prevGearBeforeDesoot = 4;
 
-  // Remembered last active output settings so OFF state doesn't drop to Lvl 0
-  let savedTargets = safeGet("vevor_saved_targets_v5", { gear: 5, thermoC: 20 });
+  let savedTargets = safeGet("vevor_saved_targets_v5", { gear: 4, thermoC: 20, modeHex: "00" });
+  if (savedTargets.gear > maxGear) savedTargets.gear = maxGear;
+  if (!savedTargets.modeHex) savedTargets.modeHex = "00";
 
   let state = {
     hasTelemetry: false,
@@ -835,9 +866,10 @@
     isHeating: false,
     isFault: false,
     faultCode: 0,
-    modeHex: "00",
+    modeHex: savedTargets.modeHex || "00",
     ecuIsFahrenheit: false,
     rawTarget: savedTargets.gear,
+    rampStage: 0,
     ambientC: null,
     caseC: null,
     volts: null,
@@ -845,7 +877,20 @@
     coPpm: null
   };
 
-  let fuelData = safeGet("vevor_fuel_v5", safeGet("vevor_fuel_v4", { capacityL: 5.0, remainingL: 4.45 }));
+  let fuelData = safeGet("vevor_fuel_v5", safeGet("vevor_fuel_v4", {
+    capacityL: 5.0,
+    remainingL: 4.45,
+    lastAccountedMs: Date.now(),
+    manualStopAtMs: 0,
+    lastOfflineNote: ""
+  }));
+  if (!fuelData.lastAccountedMs) {
+    fuelData.lastAccountedMs = Date.now();
+    fuelData.manualStopAtMs = 0;
+    fuelData.lastOfflineNote = "";
+    safeSet("vevor_fuel_v5", fuelData);
+  }
+
   let sootData = safeGet("vevor_soot_v5", safeGet("vevor_soot_v4", { lowIdleHours: 0.0 }));
   let schedMeta = safeGet("vevor_sched_meta_v5", { synced: false, lastSyncStr: "Never synced from this browser", ecuVerified: false });
   let weeklySchedule = safeGet("vevor_sched_v5", safeGet("vevor_sched_v4", [
@@ -857,9 +902,22 @@
     { start: "05:00", stop: "07:00", enabled: false },
     { start: "05:00", stop: "07:00", enabled: false }
   ]));
+
+  // Dedicated copy of the schedule actually flashed to the heater ECU (for accurate offline fuel deduction)
+  let syncedSchedData = safeGet("vevor_synced_sched_v53", null);
+  if (!syncedSchedData) {
+    syncedSchedData = {
+      active: !!schedMeta.synced,
+      syncedAtMs: Date.now(),
+      schedule: JSON.parse(JSON.stringify(weeklySchedule))
+    };
+    safeSet("vevor_synced_sched_v53", syncedSchedData);
+  }
+
   let weatherByDateISO = {};
 
   function switchTab(tabId, btnEl) {
+    reconcileOfflineScheduledBurn();
     document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
     document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
     document.getElementById("view-" + tabId).classList.add("active");
@@ -867,6 +925,8 @@
     if (tabId === "schedule") {
       renderScheduleRows();
       renderSootUI();
+    } else if (tabId === "control") {
+      renderFuelUI();
     }
   }
 
@@ -876,7 +936,91 @@
     el.innerHTML = `[${ts}] ${msg}<br>` + el.innerHTML;
   }
 
-  // ================= BLE CHUNKED WRITER (20B MTU Safe) =================
+  // ================= OFFLINE HARDWARE-TIMER FUEL RECONCILIATION =================
+  function reconcileOfflineScheduledBurn() {
+    // Skip if actively connected over BLE (live telemetry handles real-time burn)
+    if (bleDevice && bleDevice.gatt && bleDevice.gatt.connected && state.hasTelemetry) {
+      return;
+    }
+
+    const now = Date.now();
+    if (!fuelData.lastAccountedMs) {
+      fuelData.lastAccountedMs = now;
+      safeSet("vevor_fuel_v5", fuelData);
+      return;
+    }
+
+    const fromMs = fuelData.lastAccountedMs;
+    if (now - fromMs < 60000) return; // Wait for at least 1 minute of offline elapsed time
+
+    const activeSched = syncedSchedData && syncedSchedData.schedule;
+    if (!syncedSchedData || !syncedSchedData.active || !activeSched || !activeSched.some(s => s.enabled)) {
+      fuelData.lastAccountedMs = now;
+      safeSet("vevor_fuel_v5", fuelData);
+      return;
+    }
+
+    // Cap lookback to 14 days and never prior to when the schedule was synced
+    const earliestMs = Math.max(fromMs, syncedSchedData.syncedAtMs || fromMs, now - 14 * 86400000);
+    if (now <= earliestMs) {
+      fuelData.lastAccountedMs = now;
+      safeSet("vevor_fuel_v5", fuelData);
+      return;
+    }
+
+    let totalOfflineHrs = 0;
+    const startDay = new Date(earliestMs);
+    startDay.setHours(0, 0, 0, 0);
+    startDay.setDate(startDay.getDate() - 1); // Include overnight windows starting the previous night
+
+    for (let d = new Date(startDay); d.getTime() <= now; d.setDate(d.getDate() + 1)) {
+      const dow = d.getDay();
+      const slot = activeSched[dow];
+      if (!slot || !slot.enabled) continue;
+
+      const [sh, sm] = slot.start.split(":").map(Number);
+      const [eh, em] = slot.stop.split(":").map(Number);
+      const winStart = new Date(d.getFullYear(), d.getMonth(), d.getDate(), sh, sm, 0, 0).getTime();
+      let winStop = new Date(d.getFullYear(), d.getMonth(), d.getDate(), eh, em, 0, 0).getTime();
+      if (winStop <= winStart) winStop += 86400000;
+
+      // If user manually stopped the heater during this scheduled window, cap deduction at manual stop time
+      let effectiveStop = winStop;
+      if (fuelData.manualStopAtMs && fuelData.manualStopAtMs >= winStart && fuelData.manualStopAtMs < winStop) {
+        effectiveStop = fuelData.manualStopAtMs;
+      }
+
+      const overlapStart = Math.max(earliestMs, winStart);
+      const overlapEnd = Math.min(now, effectiveStop);
+      if (overlapEnd > overlapStart) {
+        totalOfflineHrs += (overlapEnd - overlapStart) / 3600000;
+      }
+    }
+
+    fuelData.lastAccountedMs = now;
+    if (totalOfflineHrs >= 0.02) {
+      const isThermo = savedTargets.modeHex === "01";
+      const effGear = isThermo ? (maxGear === 6 ? 2 : 3) : Math.min(maxGear, savedTargets.gear || 4);
+      const burnedL = burnRateLitersPerHr(effGear) * totalOfflineHrs;
+      fuelData.remainingL = Math.max(0, +(fuelData.remainingL - burnedL).toFixed(4));
+
+      const lowThreshold = maxGear === 6 ? 2 : 3;
+      const cleanThreshold = maxGear === 6 ? 5 : 8;
+      if (isThermo || effGear <= lowThreshold) {
+        sootData.lowIdleHours = +(sootData.lowIdleHours + totalOfflineHrs).toFixed(3);
+      } else if (effGear >= cleanThreshold) {
+        sootData.lowIdleHours = Math.max(0, +(sootData.lowIdleHours - totalOfflineHrs * 4).toFixed(3));
+      }
+      safeSet("vevor_soot_v5", sootData);
+
+      const timeStr = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+      fuelData.lastOfflineNote = `Auto-deducted ${totalOfflineHrs.toFixed(1)}h scheduled run (-${fmtVolFromL(burnedL)}) at ${timeStr}`;
+      log(`⛽ ${fuelData.lastOfflineNote}`);
+    }
+    safeSet("vevor_fuel_v5", fuelData);
+  }
+
+  // ================= COLLISION-PROOF BLE WRITER (20B MTU + Mutex Lock) =================
   const sleep = ms => new Promise(r => setTimeout(r, ms));
 
   function appendChecksum(hexStr) {
@@ -886,7 +1030,7 @@
   }
 
   async function writeRawHex(hexWithoutChecksum) {
-    if (!writeChar) return;
+    if (!writeChar) throw new Error("Not connected");
     const packet = appendChecksum(hexWithoutChecksum);
     const MTU = 20;
     for (let offset = 0; offset < packet.length; offset += MTU) {
@@ -896,40 +1040,59 @@
       } else {
         await writeChar.writeValueWithoutResponse(chunk);
       }
-      if (offset + MTU < packet.length) await sleep(65);
+      if (offset + MTU < packet.length) await sleep(85);
     }
+  }
+
+  async function acquireBleLock() {
+    let waits = 0;
+    while (bleBusy && waits < 40) {
+      await sleep(50);
+      waits++;
+    }
+    bleBusy = true;
   }
 
   async function sendCommand(hexWithoutChecksum) {
     if (!writeChar) {
       log("Not connected to heater.");
-      return;
+      return false;
     }
+    await acquireBleLock();
     try {
       log(`TX (${(hexWithoutChecksum.length / 2) + 1}B): ${hexWithoutChecksum.toUpperCase()}`);
       await writeRawHex(hexWithoutChecksum);
       await sleep(450);
       await writeRawHex("baab04cc000000");
+      return true;
     } catch (e) {
       log(`TX Err: ${e.message}`);
+      return false;
+    } finally {
+      bleBusy = false;
     }
   }
 
-  async function syncClock() {
+  async function buildClockHex() {
     const now = new Date();
     const hh = now.getHours().toString(16).padStart(2, "0");
     const mm = now.getMinutes().toString(16).padStart(2, "0");
     const ss = now.getSeconds().toString(16).padStart(2, "0");
     const dow = now.getDay().toString(16).padStart(2, "0");
-    await sendCommand(`baab05ea${hh}${mm}${ss}${dow}`);
+    return `baab05ea${hh}${mm}${ss}${dow}`;
+  }
+
+  async function syncClock() {
+    const clk = await buildClockHex();
+    return await sendCommand(clk);
   }
 
   // ================= FUEL TANK UI & MODAL =================
   function getAssumedGear() {
-    if (state.modeHex === "00" && state.rawTarget >= 1 && state.rawTarget <= 10) {
+    if (state.modeHex === "00" && state.rawTarget >= 1 && state.rawTarget <= maxGear) {
       return state.rawTarget;
     }
-    return savedTargets.gear || 4;
+    return Math.min(maxGear, savedTargets.gear || 4);
   }
 
   function renderFuelUI() {
@@ -944,7 +1107,15 @@
 
     document.getElementById("valFuelVol").innerHTML =
       `${remDisp} ${unitLbl} <span style="font-size:0.8rem;color:var(--muted);font-weight:600">/ ${capDisp} ${unitLbl}</span>`;
-    document.getElementById("valFuelHours").innerText = `~${hrsLeft.toFixed(1)} hrs @ Lvl ${gear}`;
+    document.getElementById("valFuelHours").innerText = `~${hrsLeft.toFixed(1)} hrs @ ${fmtGear(gear)}`;
+
+    const noteEl = document.getElementById("fuelOfflineNote");
+    if (fuelData.lastOfflineNote) {
+      noteEl.style.display = "block";
+      noteEl.innerText = `⏱️ ${fuelData.lastOfflineNote}`;
+    } else {
+      noteEl.style.display = "none";
+    }
 
     const fill = document.getElementById("fuelBarFill");
     const pill = document.getElementById("fuelStatusPill");
@@ -966,6 +1137,7 @@
   }
 
   function openFuelModal() {
+    reconcileOfflineScheduledBurn();
     const pct = Math.round((fuelData.remainingL / fuelData.capacityL) * 100);
     const lbl = document.getElementById("lblModalCap");
     const inp = document.getElementById("inpTankCap");
@@ -990,10 +1162,13 @@
     const pct = Math.max(0, Math.min(100, parseFloat(document.getElementById("inpFuelPct").value) || 0));
     fuelData.capacityL = +capL.toFixed(2);
     fuelData.remainingL = +(capL * (pct / 100)).toFixed(2);
+    fuelData.lastAccountedMs = Date.now();
+    fuelData.manualStopAtMs = 0;
+    fuelData.lastOfflineNote = "";
     safeSet("vevor_fuel_v5", fuelData);
     refreshAllDisplays();
     closeFuelModal();
-    log(`Tank set: ${pct}% (${fmtVolFromL(fuelData.remainingL)})`);
+    log(`Tank calibrated: ${pct}% (${fmtVolFromL(fuelData.remainingL)})`);
   }
 
   // ================= DE-SOOT TRACKER =================
@@ -1003,6 +1178,10 @@
     const card = document.getElementById("desootCard");
     const pill = document.getElementById("desootPill");
     const dot = document.getElementById("schedDot");
+
+    if (!desootTimer) {
+      document.getElementById("btnDesoot").innerText = `🔥 RUN 15-MIN MAX DE-SOOT (${fmtGear(maxGear)})`;
+    }
 
     if (hrs >= 20) {
       card.classList.add("due");
@@ -1032,12 +1211,12 @@
     if (desootTimer) {
       clearInterval(desootTimer);
       desootTimer = null;
-      document.getElementById("btnDesoot").innerText = "🔥 RUN 15-MIN MAX DE-SOOT";
+      renderSootUI();
       log("De-soot timer stopped.");
       return;
     }
     prevGearBeforeDesoot = getAssumedGear();
-    log("Starting 15-Min Carbon De-Soot Burn (Lvl 10)...");
+    log(`Starting 15-Min Carbon De-Soot Burn (${fmtGear(maxGear)})...`);
     if (!state.isHeating && state.runCode === "00") {
       await sendCommand("baab04bba10000");
       await sleep(1200);
@@ -1046,7 +1225,7 @@
       await sendCommand("baab04bbac0000");
       await sleep(600);
     }
-    await stepToRawTarget(10);
+    await stepToRawTarget(maxGear);
 
     desootSecLeft = 15 * 60;
     const btn = document.getElementById("btnDesoot");
@@ -1058,7 +1237,6 @@
       if (desootSecLeft <= 0) {
         clearInterval(desootTimer);
         desootTimer = null;
-        btn.innerText = "🔥 RUN 15-MIN MAX DE-SOOT";
         resetSootCounter();
         log("De-Soot Complete! Restoring previous level...");
         await stepToRawTarget(prevGearBeforeDesoot);
@@ -1068,19 +1246,28 @@
 
   function trackLiveBurnAndSoot() {
     const now = Date.now();
-    const dtHours = Math.min((now - lastTickMs) / 3600000, 0.05);
+    const dtHours = Math.min(Math.max(0, (now - lastTickMs) / 3600000), 0.05);
     lastTickMs = now;
-    if (!state.isHeating || dtHours <= 0) return;
+    fuelData.lastAccountedMs = now;
 
-    const effGear = state.modeHex === "01" ? 3 : getAssumedGear();
+    if (!state.isHeating || dtHours <= 0) {
+      safeSet("vevor_fuel_v5", fuelData);
+      return;
+    }
+
+    const idleGearEquiv = maxGear === 6 ? 2 : 3;
+    const lowThreshold = maxGear === 6 ? 2 : 3;
+    const cleanThreshold = maxGear === 6 ? 5 : 8;
+
+    const effGear = state.modeHex === "01" ? idleGearEquiv : getAssumedGear();
     const burnedL = burnRateLitersPerHr(effGear) * dtHours;
     fuelData.remainingL = Math.max(0, +(fuelData.remainingL - burnedL).toFixed(4));
     safeSet("vevor_fuel_v5", fuelData);
     renderFuelUI();
 
-    if (state.modeHex === "01" || effGear <= 3) {
+    if (state.modeHex === "01" || effGear <= lowThreshold) {
       sootData.lowIdleHours = +(sootData.lowIdleHours + dtHours).toFixed(3);
-    } else if (effGear >= 8) {
+    } else if (effGear >= cleanThreshold) {
       sootData.lowIdleHours = Math.max(0, +(sootData.lowIdleHours - dtHours * 4).toFixed(3));
     }
     safeSet("vevor_soot_v5", sootData);
@@ -1088,12 +1275,17 @@
   }
 
   // ================= SCHEDULE, ECU CHECK & WEATHER =================
-  function calcSlotHours(startStr, stopStr) {
+  function calcRemainingSlotHours(startStr, stopStr, isToday, nowMins) {
     const [sh, sm] = startStr.split(":").map(Number);
     const [eh, em] = stopStr.split(":").map(Number);
-    let diffMin = (eh * 60 + em) - (sh * 60 + sm);
-    if (diffMin <= 0) diffMin += 24 * 60;
-    return diffMin / 60;
+    const startM = sh * 60 + sm;
+    let stopM = eh * 60 + em;
+    if (stopM <= startM) stopM += 24 * 60;
+
+    if (!isToday) return (stopM - startM) / 60;
+    if (nowMins < startM) return (stopM - startM) / 60;
+    if (nowMins < stopM) return (stopM - nowMins) / 60;
+    return 0;
   }
 
   function renderScheduleRows() {
@@ -1108,9 +1300,11 @@
 
     const activeCount = weeklySchedule.filter(s => s.enabled).length;
     let statusHtml = "";
-    if (schedMeta.synced) {
+    if (schedMeta.writeFailed) {
+      statusHtml = `<span style="color:var(--red);font-weight:800;">⚠️ BLE WRITE INTERRUPTED — Tap Save Again!</span>`;
+    } else if (schedMeta.synced) {
       const badgeTxt = schedMeta.ecuVerified ? "✅ VERIFIED FROM ECU" : `✅ SYNCED (${schedMeta.lastSyncStr})`;
-      statusHtml = `<span style="color:var(--green);font-weight:700;">${badgeTxt}</span> • ${activeCount === 0 ? 'All Timers OFF (⏰ Off)' : activeCount + ' day(s) @ Lvl ' + gear}`;
+      statusHtml = `<span style="color:var(--green);font-weight:700;">${badgeTxt}</span> • ${activeCount === 0 ? 'All Timers OFF (⏰ Off)' : activeCount + ' day(s) @ ' + fmtGear(gear) + ' (' + rateL.toFixed(2) + ' L/h)'}`;
     } else {
       statusHtml = `<span style="color:var(--amber);font-weight:700;">● UNSAVED EDITS</span> — Tap Save below to program heater`;
     }
@@ -1127,15 +1321,14 @@
       const dateLabel = d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
       const isoKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 
-      const [sh, sm] = slot.start.split(":").map(Number);
-      const runOccursInFuture = offset > 0 || (sh * 60 + sm) > nowMins;
-      if (slot.enabled && runOccursInFuture) {
-        const hrs = calcSlotHours(slot.start, slot.stop);
-        simRemainingL = Math.max(0, simRemainingL - hrs * rateL);
+      let remHrs = 0;
+      if (slot.enabled) {
+        remHrs = calcRemainingSlotHours(slot.start, slot.stop, offset === 0, nowMins);
+        simRemainingL = Math.max(0, simRemainingL - remHrs * rateL);
       }
 
       const projPct = Math.round((simRemainingL / fuelData.capacityL) * 100);
-      if (slot.enabled && runOccursInFuture && projPct <= 20 && !firstRefillDay) {
+      if (slot.enabled && remHrs > 0 && projPct <= 20 && !firstRefillDay) {
         firstRefillDay = `${DAY_NAMES[dow]} (${dateLabel})`;
       }
 
@@ -1161,9 +1354,9 @@
         </div>
         <div class="sched-bottom">
           <div class="sched-times">
-            <input type="time" value="${slot.start}" onchange="updateSlot(${dow}, 'start', this.value)" />
+            <input type="time" value="${slot.start}" oninput="updateSlot(${dow}, 'start', this.value)" onchange="updateSlot(${dow}, 'start', this.value)" />
             <span>→</span>
-            <input type="time" value="${slot.stop}" onchange="updateSlot(${dow}, 'stop', this.value)" />
+            <input type="time" value="${slot.stop}" oninput="updateSlot(${dow}, 'stop', this.value)" onchange="updateSlot(${dow}, 'stop', this.value)" />
           </div>
           <div class="sched-meta">
             ${weatherSpan}
@@ -1177,7 +1370,7 @@
     const alertBox = document.getElementById("refillAlert");
     if (firstRefillDay) {
       alertBox.style.display = "block";
-      alertBox.innerText = `⚠️ Tank drops ≤ 20% by ${firstRefillDay} (@ Lvl ${gear}) — refill before then!`;
+      alertBox.innerText = `⚠️ Tank drops ≤ 20% by ${firstRefillDay} (@ ${fmtGear(gear)}) — refill before then!`;
     } else {
       alertBox.style.display = "none";
     }
@@ -1186,19 +1379,23 @@
   function markUnsaved() {
     schedMeta.synced = false;
     schedMeta.ecuVerified = false;
+    schedMeta.writeFailed = false;
     safeSet("vevor_sched_v5", weeklySchedule);
     safeSet("vevor_sched_meta_v5", schedMeta);
-    renderScheduleRows();
   }
 
   function updateSlot(dow, field, val) {
-    weeklySchedule[dow][field] = val || "05:00";
+    if (!val) return;
+    if (weeklySchedule[dow][field] === val) return;
+    weeklySchedule[dow][field] = val;
     markUnsaved();
+    renderScheduleRows();
   }
 
   function toggleSlot(dow) {
     weeklySchedule[dow].enabled = !weeklySchedule[dow].enabled;
     markUnsaved();
+    renderScheduleRows();
   }
 
   async function checkHeaterSchedule() {
@@ -1209,9 +1406,15 @@
     log("Querying heater ECU timer memory...");
     rxBuffer = "";
     awaitingScheduleRead = true;
-    await writeRawHex("baab04ee000000");
-    await sleep(350);
-    if (awaitingScheduleRead) await writeRawHex("baab04ed000000");
+    await acquireBleLock();
+    try {
+      await writeRawHex("baab04ee000000");
+      await sleep(350);
+      if (awaitingScheduleRead) await writeRawHex("baab04ed000000");
+    } catch (_) {
+    } finally {
+      bleBusy = false;
+    }
 
     setTimeout(() => {
       if (awaitingScheduleRead) {
@@ -1245,24 +1448,27 @@
       }
     }
     awaitingScheduleRead = false;
-    schedMeta = { synced: true, lastSyncStr: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}), ecuVerified: true };
+    const now = Date.now();
+    schedMeta = { synced: true, lastSyncStr: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}), ecuVerified: true, writeFailed: false };
+    syncedSchedData = { active: true, syncedAtMs: now, schedule: JSON.parse(JSON.stringify(weeklySchedule)) };
     safeSet("vevor_sched_v5", weeklySchedule);
     safeSet("vevor_sched_meta_v5", schedMeta);
+    safeSet("vevor_synced_sched_v53", syncedSchedData);
     renderScheduleRows();
     log("✅ Verified live 7-day schedule directly from Heater ECU!");
     return true;
   }
 
+  // Atomic Lock + Dual-Write Verification so 40B schedule NEVER collides with background polls
   async function pushCustomSchedule() {
+    reconcileOfflineScheduledBurn();
     safeSet("vevor_sched_v5", weeklySchedule);
     if (!writeChar) {
       markUnsaved();
+      renderScheduleRows();
       log("Saved locally! Connect to heater to push schedule.");
       return;
     }
-    log("Syncing RTC clock & writing 40B chunked schedule...");
-    await syncClock();
-    await sleep(450);
 
     let payload = "baab24ed";
     for (let dow = 0; dow < 7; dow++) {
@@ -1278,15 +1484,54 @@
                 +  "11";
       }
     }
-    await sendCommand(payload);
-    schedMeta = {
-      synced: true,
-      lastSyncStr: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-      ecuVerified: false
-    };
-    safeSet("vevor_sched_meta_v5", schedMeta);
-    renderScheduleRows();
-    log("✅ Schedule programmed onto Heater ECU!");
+
+    await acquireBleLock();
+    try {
+      log("Locking BLE bus: syncing clock + writing 40B schedule (x2)...");
+      const clkHex = await buildClockHex();
+      log(`TX (9B): ${clkHex.toUpperCase()}`);
+      await writeRawHex(clkHex);
+      await sleep(500);
+
+      log(`TX (40B #1): ${payload.toUpperCase()}`);
+      await writeRawHex(payload);
+      await sleep(450);
+
+      log(`TX (40B #2): ${payload.toUpperCase()}`);
+      await writeRawHex(payload);
+      await sleep(450);
+
+      await writeRawHex("baab04cc000000");
+
+      const now = Date.now();
+      schedMeta = {
+        synced: true,
+        lastSyncStr: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+        ecuVerified: false,
+        writeFailed: false
+      };
+      syncedSchedData = {
+        active: weeklySchedule.some(s => s.enabled),
+        syncedAtMs: now,
+        schedule: JSON.parse(JSON.stringify(weeklySchedule))
+      };
+      fuelData.lastAccountedMs = now;
+      fuelData.manualStopAtMs = 0;
+      safeSet("vevor_fuel_v5", fuelData);
+      safeSet("vevor_sched_meta_v5", schedMeta);
+      safeSet("vevor_synced_sched_v53", syncedSchedData);
+      renderScheduleRows();
+      renderFuelUI();
+      log("✅ Schedule double-written & verified on Heater ECU!");
+    } catch (e) {
+      schedMeta.synced = false;
+      schedMeta.writeFailed = true;
+      safeSet("vevor_sched_meta_v5", schedMeta);
+      renderScheduleRows();
+      log(`❌ Schedule Write Error: ${e.message} — Tap Save again!`);
+    } finally {
+      bleBusy = false;
+    }
   }
 
   async function clearAllTimersOnHeater() {
@@ -1343,6 +1588,11 @@
       log("Wait for COOLING purge to finish before restarting.");
       return;
     }
+    // Record manual shutoff timestamp so offline tracker doesn't deduct remaining window minutes
+    if (state.isHeating) {
+      fuelData.manualStopAtMs = Date.now();
+      safeSet("vevor_fuel_v5", fuelData);
+    }
     await sendCommand("baab04bba10000");
   }
 
@@ -1352,13 +1602,13 @@
   }
 
   function getTargetInDisplayUnits(rawVal) {
-    if (state.modeHex !== "01") return rawVal;
+    if (state.modeHex !== "01") return Math.min(maxGear, Math.max(1, rawVal));
     const rawInC = state.ecuIsFahrenheit ? fToC(rawVal) : rawVal;
     return useImperial ? cToF(rawInC) : rawInC;
   }
 
   function displayUnitsToRawTarget(dispVal) {
-    if (state.modeHex !== "01") return dispVal;
+    if (state.modeHex !== "01") return Math.min(maxGear, Math.max(1, dispVal));
     const valInC = useImperial ? fToC(dispVal) : dispVal;
     return state.ecuIsFahrenheit ? cToF(valInC) : valInC;
   }
@@ -1366,7 +1616,7 @@
   function onSliderPreview(val) {
     const unit = useImperial ? "°F" : "°C";
     document.getElementById("valTarget").innerText =
-      state.modeHex === "01" ? `${val} ${unit}` : `Lvl ${val}`;
+      state.modeHex === "01" ? `${val} ${unit}` : fmtGear(val);
   }
 
   async function adjustLevel(delta) {
@@ -1375,21 +1625,40 @@
       log("Start heater first to adjust output level.");
       return;
     }
+    if (state.modeHex === "00") {
+      if (delta > 0 && state.rawTarget >= maxGear) {
+        log(`Already at max gear (${fmtGear(maxGear)}).`);
+        return;
+      }
+      if (delta < 0 && state.rawTarget <= 1) {
+        log(`Already at min gear (${fmtGear(1)}).`);
+        return;
+      }
+    }
     const cmd = delta > 0 ? "baab04bba20000" : "baab04bba30000";
     await sendCommand(cmd);
   }
 
   async function stepToRawTarget(targetRaw) {
-    const diff = targetRaw - state.rawTarget;
+    const clamped = state.modeHex === "00" ? Math.min(maxGear, Math.max(1, targetRaw)) : targetRaw;
+    const diff = clamped - state.rawTarget;
     if (diff === 0 || !writeChar) return;
-    const stepCmd = diff > 0 ? "baab04bba20000" : "baab04bba30000";
-    const steps = Math.min(Math.abs(diff), 20);
-    log(`Stepping ${diff > 0 ? '+' : '-'}${steps}...`);
-    for (let i = 0; i < steps; i++) {
-      await writeRawHex(stepCmd);
-      await sleep(320);
+
+    await acquireBleLock();
+    try {
+      const stepCmd = diff > 0 ? "baab04bba20000" : "baab04bba30000";
+      const steps = Math.min(Math.abs(diff), 20);
+      log(`Stepping ${diff > 0 ? '+' : '-'}${steps} to ${state.modeHex === '00' ? fmtGear(clamped) : clamped}...`);
+      for (let i = 0; i < steps; i++) {
+        await writeRawHex(stepCmd);
+        await sleep(320);
+      }
+      await writeRawHex("baab04cc000000");
+    } catch (e) {
+      log(`Step Err: ${e.message}`);
+    } finally {
+      bleBusy = false;
     }
-    await writeRawHex("baab04cc000000");
   }
 
   async function onSliderCommit(dispVal) {
@@ -1408,7 +1677,6 @@
     const pill = document.getElementById("battPill");
     pill.style.display = "inline-block";
 
-    // Support both 12V and 24V trailer/vehicle setups + whole-integer BLE reporting (12V = BATT OK on float!)
     if (volts >= 20) {
       if (volts >= 26.0) { pill.className = "pill pill-ok"; pill.innerText = "CHARGING"; }
       else if (volts >= 24.0) { pill.className = "pill pill-ok"; pill.innerText = "BATT OK"; }
@@ -1479,14 +1747,20 @@
     document.getElementById("btnMinus").disabled = isOff;
     document.getElementById("btnPlus").disabled = isOff;
 
+    const scaleBtn = document.getElementById("btnGearScale");
+    if (scaleBtn) {
+      scaleBtn.innerText = maxGear === 6 ? "Current Scale: 6 Levels (H-1 – H-6)" : "Current Scale: 10 Levels (Lvl 1 – 10)";
+    }
+
+    const scaleDesc = maxGear === 6 ? "H-1 – H-6" : "1–10";
     if (state.modeHex === "01") {
       slider.min = useImperial ? 46 : 8;
       slider.max = useImperial ? 97 : 36;
       document.getElementById("lblSliderTitle").innerText = `TARGET THERMOSTAT (${useImperial ? '46–97°F' : '8–36°C'})`;
     } else {
       slider.min = 1;
-      slider.max = 10;
-      document.getElementById("lblSliderTitle").innerText = isOff ? "NEXT STARTUP GEAR (1–10)" : "TARGET PUMP GEAR (1–10)";
+      slider.max = maxGear;
+      document.getElementById("lblSliderTitle").innerText = isOff ? `NEXT STARTUP GEAR (${scaleDesc})` : `TARGET PUMP GEAR (${scaleDesc})`;
     }
 
     updateCoUI();
@@ -1494,9 +1768,9 @@
     if (!state.hasTelemetry) {
       document.getElementById("valAmbient").innerText = `-- ${useImperial ? '°F' : '°C'}`;
       document.getElementById("valCase").innerText = `-- ${useImperial ? '°F' : '°C'}`;
-      const savedG = savedTargets.gear || 4;
+      const savedG = Math.min(maxGear, savedTargets.gear || 4);
       slider.value = savedG;
-      document.getElementById("valTarget").innerText = `Saved: Lvl ${savedG}`;
+      document.getElementById("valTarget").innerText = `Saved: ${fmtGear(savedG)}`;
       return;
     }
 
@@ -1530,11 +1804,12 @@
       slider.value = dispTarget;
       const prefix = isOff ? "Saved: " : "";
       document.getElementById("valTarget").innerText =
-        state.modeHex === "01" ? `${prefix}${dispTarget} ${useImperial ? '°F' : '°C'}` : `${prefix}Lvl ${dispTarget}`;
+        state.modeHex === "01" ? `${prefix}${dispTarget} ${useImperial ? '°F' : '°C'}` : `${prefix}${fmtGear(dispTarget)}`;
     }
   }
 
   function refreshAllDisplays() {
+    reconcileOfflineScheduledBurn();
     document.getElementById("btnUnit").innerText = useImperial ? "°F" : "°C";
     renderTelemetryUI();
     renderFuelUI();
@@ -1564,12 +1839,19 @@
       state.isFault = hexArr[5] === "ff";
       state.modeHex = hexArr[5];
       const rawVal6 = parseInt(hexArr[6], 16);
+      state.rampStage = parseInt(hexArr[7], 16);
+
+      // Auto-expand scale if a 10-gear heater reports gear 7..10
+      if (!state.isFault && state.modeHex === "00" && rawVal6 > 6 && maxGear === 6) {
+        maxGear = 10;
+        safeSet("vevor_max_gear_v52", 10);
+      }
 
       if (state.isFault) {
         state.faultCode = rawVal6;
       } else if (rawVal6 > 0) {
-        // Active running target — update state and persist for OFF memory!
         state.rawTarget = rawVal6;
+        savedTargets.modeHex = state.modeHex;
         if (state.modeHex === "00" && rawVal6 >= 1 && rawVal6 <= 10) {
           savedTargets.gear = rawVal6;
         } else if (state.modeHex === "01") {
@@ -1577,10 +1859,9 @@
         }
         safeSet("vevor_saved_targets_v5", savedTargets);
       } else {
-        // Heater is OFF and sending 0x00 in Byte 6 — recall last saved Gear/Temp!
         state.rawTarget = state.modeHex === "01"
           ? (state.ecuIsFahrenheit ? cToF(savedTargets.thermoC) : savedTargets.thermoC)
-          : (savedTargets.gear || 4);
+          : Math.min(maxGear, savedTargets.gear || 4);
       }
 
       const b8 = parseInt(hexArr[8], 16);
@@ -1633,12 +1914,28 @@
     }
   }
 
+  function startSafePoll() {
+    clearInterval(pollInterval);
+    pollInterval = setInterval(async () => {
+      if (bleBusy || !writeChar) return;
+      bleBusy = true;
+      try {
+        await writeRawHex("baab04cc000000");
+      } catch (_) {
+      } finally {
+        bleBusy = false;
+      }
+    }, 2500);
+  }
+
   async function toggleConnect() {
     if (bleDevice && bleDevice.gatt.connected) {
       bleDevice.gatt.disconnect();
       return;
     }
     try {
+      reconcileOfflineScheduledBurn();
+      renderFuelUI();
       log("Scanning for BLE Heater...");
       bleDevice = await navigator.bluetooth.requestDevice({
         filters: [{ services: [0xfff0] }, { services: [0xffe0] }, { namePrefix: "BT_" }, { namePrefix: "Heater" }, { namePrefix: "@" }],
@@ -1649,13 +1946,16 @@
       await bindServices(server);
 
       lastTickMs = Date.now();
+      fuelData.lastAccountedMs = lastTickMs;
+      safeSet("vevor_fuel_v5", fuelData);
+
       document.getElementById("connBadge").className = "badge connected";
       document.getElementById("connBadge").innerText = bleDevice.name || "ONLINE";
       document.getElementById("btnConnect").innerText = "DISCONNECT";
 
       await sleep(400);
       await syncClock();
-      pollInterval = setInterval(() => writeRawHex("baab04cc000000"), 2500);
+      startSafePoll();
     } catch (err) {
       log(`BLE Error: ${err.message}`);
     }
@@ -1663,7 +1963,10 @@
 
   function onDisconnected() {
     clearInterval(pollInterval);
+    bleBusy = false;
     writeChar = null;
+    fuelData.lastAccountedMs = Date.now();
+    safeSet("vevor_fuel_v5", fuelData);
     document.getElementById("connBadge").className = "badge";
     document.getElementById("connBadge").innerText = "OFFLINE";
     document.getElementById("btnConnect").innerText = "CONNECT HEATER";
@@ -1671,20 +1974,32 @@
   }
 
   document.addEventListener("visibilitychange", async () => {
-    if (document.visibilityState === "visible" && bleDevice && !bleDevice.gatt.connected) {
-      log("Phone unlocked — auto-reconnecting...");
-      try {
-        const server = await bleDevice.gatt.connect();
-        await bindServices(server);
-        lastTickMs = Date.now();
-        document.getElementById("connBadge").className = "badge connected";
-        document.getElementById("connBadge").innerText = bleDevice.name || "ONLINE";
-        document.getElementById("btnConnect").innerText = "DISCONNECT";
-        clearInterval(pollInterval);
-        pollInterval = setInterval(() => writeRawHex("baab04cc000000"), 2500);
-        await writeRawHex("baab04cc000000");
-      } catch (e) {
-        log("Out of range or asleep. Tap Connect.");
+    if (document.visibilityState === "visible") {
+      reconcileOfflineScheduledBurn();
+      renderFuelUI();
+      renderScheduleRows();
+      renderSootUI();
+
+      if (bleDevice && !bleDevice.gatt.connected) {
+        log("Phone unlocked — auto-reconnecting...");
+        try {
+          const server = await bleDevice.gatt.connect();
+          await bindServices(server);
+          lastTickMs = Date.now();
+          fuelData.lastAccountedMs = lastTickMs;
+          safeSet("vevor_fuel_v5", fuelData);
+          document.getElementById("connBadge").className = "badge connected";
+          document.getElementById("connBadge").innerText = bleDevice.name || "ONLINE";
+          document.getElementById("btnConnect").innerText = "DISCONNECT";
+          startSafePoll();
+          if (!bleBusy) {
+            bleBusy = true;
+            try { await writeRawHex("baab04cc000000"); } catch (_) {}
+            bleBusy = false;
+          }
+        } catch (e) {
+          log("Out of range or asleep. Tap Connect.");
+        }
       }
     }
   });
